@@ -212,4 +212,8 @@ public class RestSqlAction extends BaseRestHandler {
         OpenDistroSqlAnalyzer analyzer = new OpenDistroSqlAnalyzer(config);
         analyzer.analyze(sql, clusterState);
     }
+
+    private void calcite(Client client) {
+
+    }
 }
