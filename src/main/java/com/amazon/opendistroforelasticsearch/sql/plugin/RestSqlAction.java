@@ -25,13 +25,13 @@ import com.amazon.opendistroforelasticsearch.sql.exception.SqlParseException;
 import com.amazon.opendistroforelasticsearch.sql.executor.ActionRequestRestExecutorFactory;
 import com.amazon.opendistroforelasticsearch.sql.executor.RestExecutor;
 import com.amazon.opendistroforelasticsearch.sql.executor.format.ErrorMessage;
-import com.amazon.opendistroforelasticsearch.sql.utils.JsonPrettyFormatter;
 import com.amazon.opendistroforelasticsearch.sql.metrics.MetricName;
 import com.amazon.opendistroforelasticsearch.sql.metrics.Metrics;
 import com.amazon.opendistroforelasticsearch.sql.query.QueryAction;
 import com.amazon.opendistroforelasticsearch.sql.request.SqlRequest;
 import com.amazon.opendistroforelasticsearch.sql.request.SqlRequestFactory;
 import com.amazon.opendistroforelasticsearch.sql.rewriter.matchtoterm.VerificationException;
+import com.amazon.opendistroforelasticsearch.sql.utils.JsonPrettyFormatter;
 import com.amazon.opendistroforelasticsearch.sql.utils.LogUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +55,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static com.amazon.opendistroforelasticsearch.sql.calcite.PluginAdapter.calcite;
 import static com.amazon.opendistroforelasticsearch.sql.plugin.SqlSettings.QUERY_ANALYSIS_ENABLED;
 import static com.amazon.opendistroforelasticsearch.sql.plugin.SqlSettings.QUERY_ANALYSIS_SEMANTIC_SUGGESTION;
 import static com.amazon.opendistroforelasticsearch.sql.plugin.SqlSettings.QUERY_ANALYSIS_SEMANTIC_THRESHOLD;
@@ -110,8 +111,9 @@ public class RestSqlAction extends BaseRestHandler {
             final SqlRequest sqlRequest = SqlRequestFactory.getSqlRequest(request);
             LOG.info("[{}] Incoming request {}: {}", LogUtils.getRequestId(), request.uri(), sqlRequest.getSql());
 
-            final QueryAction queryAction = explainRequest(client, sqlRequest);
-            return channel -> executeSqlRequest(request, queryAction, client, channel);
+//            final QueryAction queryAction = explainRequest(client, sqlRequest);
+//            return channel -> executeSqlRequest(request, queryAction, client, channel);
+            return channel -> executeCalciteRequest(sqlRequest.getSql(), channel);
         } catch (Exception e) {
             logAndPublishMetrics(e);
             return channel -> reportError(channel, e, isClientError(e) ? BAD_REQUEST : SERVICE_UNAVAILABLE);
@@ -213,7 +215,7 @@ public class RestSqlAction extends BaseRestHandler {
         analyzer.analyze(sql, clusterState);
     }
 
-    private void calcite(Client client) {
-
+    private void executeCalciteRequest(String sql, RestChannel channel) {
+        channel.sendResponse(new BytesRestResponse(OK, "application/json; charset=UTF-8", calcite(sql)));
     }
 }

@@ -23,7 +23,11 @@ import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexVisitor;
+import org.apache.calcite.rex.RexVisitorImpl;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -35,56 +39,66 @@ import java.util.Objects;
  * relational expression in Elasticsearch.
  */
 public class ElasticsearchFilter extends Filter implements ElasticsearchRel {
-  ElasticsearchFilter(RelOptCluster cluster, RelTraitSet traitSet, RelNode child,
-                      RexNode condition) {
-    super(cluster, traitSet, child, condition);
-    assert getConvention() == ElasticsearchRel.CONVENTION;
-    assert getConvention() == child.getConvention();
-  }
-
-  @Override public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    return super.computeSelfCost(planner, mq).multiplyBy(0.1);
-  }
-
-  @Override public Filter copy(RelTraitSet relTraitSet, RelNode input, RexNode condition) {
-    return new ElasticsearchFilter(getCluster(), relTraitSet, input, condition);
-  }
-
-  @Override public void implement(Implementor implementor) {
-    implementor.visitChild(0, getInput());
-    ObjectMapper mapper = implementor.elasticsearchTable.mapper;
-    PredicateAnalyzerTranslator translator = new PredicateAnalyzerTranslator(mapper);
-    try {
-      implementor.add(translator.translateMatch(condition));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    } catch (PredicateAnalyzer.ExpressionNotAnalyzableException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * New version of translator which uses visitor pattern
-   * and allow to process more complex (boolean) predicates.
-   */
-  static class PredicateAnalyzerTranslator {
-    private final ObjectMapper mapper;
-
-    PredicateAnalyzerTranslator(final ObjectMapper mapper) {
-      this.mapper = Objects.requireNonNull(mapper, "mapper");
+    ElasticsearchFilter(RelOptCluster cluster, RelTraitSet traitSet, RelNode child,
+                        RexNode condition) {
+        super(cluster, traitSet, child, condition);
+        assert getConvention() == ElasticsearchRel.CONVENTION;
+        assert getConvention() == child.getConvention();
     }
 
-    String translateMatch(RexNode condition) throws IOException,
-        PredicateAnalyzer.ExpressionNotAnalyzableException {
-
-      StringWriter writer = new StringWriter();
-      JsonGenerator generator = mapper.getFactory().createGenerator(writer);
-      QueryBuilders.constantScoreQuery(PredicateAnalyzer.analyze(condition)).writeJson(generator);
-      generator.flush();
-      generator.close();
-      return "{\"query\" : " + writer.toString() + "}";
+    @Override
+    public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
+        return super.computeSelfCost(planner, mq).multiplyBy(0.1);
     }
-  }
+
+    @Override
+    public Filter copy(RelTraitSet relTraitSet, RelNode input, RexNode condition) {
+        return new ElasticsearchFilter(getCluster(), relTraitSet, input, condition);
+    }
+
+    @Override
+    public void implement(Implementor implementor) {
+        implementor.visitChild(0, getInput());
+        ObjectMapper mapper = implementor.elasticsearchTable.mapper;
+        PredicateAnalyzerTranslator translator = new PredicateAnalyzerTranslator(mapper);
+        try {
+            // rewrite RexInputRef
+//            condition.accept(new RexVisitorImpl<RexNode>(true) {
+//                @Override
+//                public RexNode visitInputRef(RexInputRef inputRef) {
+//                    return new ElasticsearchInputRef(inputRef.getIndex(), "MAP", inputRef.getType());
+//                }
+//            });
+            implementor.add(translator.translateMatch(condition, implementor.elasticsearchTable.getRelDataType()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (PredicateAnalyzer.ExpressionNotAnalyzableException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * New version of translator which uses visitor pattern
+     * and allow to process more complex (boolean) predicates.
+     */
+    static class PredicateAnalyzerTranslator {
+        private final ObjectMapper mapper;
+
+        PredicateAnalyzerTranslator(final ObjectMapper mapper) {
+            this.mapper = Objects.requireNonNull(mapper, "mapper");
+        }
+
+        String translateMatch(RexNode condition, RelDataType relDataType) throws IOException,
+                PredicateAnalyzer.ExpressionNotAnalyzableException {
+
+            StringWriter writer = new StringWriter();
+            JsonGenerator generator = mapper.getFactory().createGenerator(writer);
+            QueryBuilders.constantScoreQuery(PredicateAnalyzer.analyze(condition, relDataType)).writeJson(generator);
+            generator.flush();
+            generator.close();
+            return "{\"query\" : " + writer.toString() + "}";
+        }
+    }
 
 }
 

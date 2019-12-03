@@ -14,12 +14,14 @@
  */
 package com.amazon.opendistroforelasticsearch.sql.calcite;
 
+import com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.BoolQueryBuilder;
+import com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.QueryBuilder;
+import com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.RangeQueryBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import org.apache.calcite.adapter.elasticsearch.QueryBuilders.BoolQueryBuilder;
-import org.apache.calcite.adapter.elasticsearch.QueryBuilders.QueryBuilder;
-import org.apache.calcite.adapter.elasticsearch.QueryBuilders.RangeQueryBuilder;
+
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
@@ -42,12 +44,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.boolQuery;
+import static com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.existsQuery;
+import static com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.rangeQuery;
+import static com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.regexpQuery;
+import static com.amazon.opendistroforelasticsearch.sql.calcite.QueryBuilders.termQuery;
 import static java.lang.String.format;
-import static org.apache.calcite.adapter.elasticsearch.QueryBuilders.boolQuery;
-import static org.apache.calcite.adapter.elasticsearch.QueryBuilders.existsQuery;
-import static org.apache.calcite.adapter.elasticsearch.QueryBuilders.rangeQuery;
-import static org.apache.calcite.adapter.elasticsearch.QueryBuilders.regexpQuery;
-import static org.apache.calcite.adapter.elasticsearch.QueryBuilders.termQuery;
 
 /**
  * Query predicate analyzer. Uses visitor pattern to traverse existing expression
@@ -99,11 +101,13 @@ class PredicateAnalyzer {
    * @return search query which can be used to query ES cluster
    * @throws ExpressionNotAnalyzableException when expression can't processed by this analyzer
    */
-  static QueryBuilder analyze(RexNode expression) throws ExpressionNotAnalyzableException {
+  static QueryBuilder analyze(RexNode expression, RelDataType relDataType) throws ExpressionNotAnalyzableException {
     Objects.requireNonNull(expression, "expression");
     try {
       // visits expression tree
-      QueryExpression e = (QueryExpression) expression.accept(new Visitor());
+        final Visitor visitor = new Visitor();
+        visitor.relDataType = relDataType;
+        QueryExpression e = (QueryExpression) expression.accept(visitor);
 
       if (e != null && e.isPartial()) {
         throw new UnsupportedOperationException("Can't handle partial QueryExpression: " + e);
@@ -144,13 +148,14 @@ class PredicateAnalyzer {
    * Traverses {@link RexNode} tree and builds ES query.
    */
   private static class Visitor extends RexVisitorImpl<Expression> {
+      RelDataType relDataType;
 
     private Visitor() {
       super(true);
     }
 
     @Override public Expression visitInputRef(RexInputRef inputRef) {
-      return new NamedFieldExpression(inputRef);
+      return new NamedFieldExpression(inputRef, relDataType);
     }
 
     @Override public Expression visitLiteral(RexLiteral literal) {
@@ -628,7 +633,7 @@ class PredicateAnalyzer {
     }
 
     @Override public QueryExpression not() {
-      return new CompoundQueryExpression(partial, QueryBuilders.boolQuery().mustNot(builder()));
+      return new CompoundQueryExpression(partial, boolQuery().mustNot(builder()));
     }
 
     @Override public QueryExpression exists() {
@@ -815,7 +820,7 @@ class PredicateAnalyzer {
    * @return existing builder with possible {@code format} attribute
    */
   private static RangeQueryBuilder addFormatIfNecessary(LiteralExpression literal,
-      RangeQueryBuilder rangeQueryBuilder) {
+                                                        RangeQueryBuilder rangeQueryBuilder) {
     if (literal.value() instanceof GregorianCalendar) {
       rangeQueryBuilder.format("date_time");
     }
@@ -868,8 +873,10 @@ class PredicateAnalyzer {
       this.name = null;
     }
 
-    private NamedFieldExpression(RexInputRef schemaField) {
-      this.name = schemaField == null ? null : schemaField.getName();
+    private NamedFieldExpression(RexInputRef schemaField, RelDataType relDataType) {
+
+        final RelDataTypeField relDataTypeField = relDataType.getFieldList().get(schemaField.getIndex());
+        this.name = schemaField == null ? null : relDataTypeField.getName();
     }
 
     private NamedFieldExpression(RexLiteral literal) {

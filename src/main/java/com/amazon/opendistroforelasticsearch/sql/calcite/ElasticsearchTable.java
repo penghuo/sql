@@ -14,12 +14,13 @@
  */
 package com.amazon.opendistroforelasticsearch.sql.calcite;
 
+import com.amazon.opendistroforelasticsearch.sql.calcite.ElasticsearchMapping.Datatype;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import org.apache.calcite.adapter.elasticsearch.ElasticsearchMapping.Datatype;
+
 import org.apache.calcite.adapter.java.AbstractQueryableTable;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.linq4j.Enumerable;
@@ -38,8 +39,9 @@ import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.TranslatableTable;
 import org.apache.calcite.schema.impl.AbstractTableQueryable;
 import org.apache.calcite.util.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -62,7 +64,7 @@ import java.util.stream.Collectors;
  */
 public class ElasticsearchTable extends AbstractQueryableTable implements TranslatableTable {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchTable.class);
+    private static final Logger LOGGER = LogManager.getLogger(ElasticsearchTable.class);
 
   /**
    * Used for constructing (possibly nested) Elastic aggregation nodes.
@@ -73,6 +75,12 @@ public class ElasticsearchTable extends AbstractQueryableTable implements Transl
   private final String indexName;
   final ObjectMapper mapper;
   final ElasticsearchTransport transport;
+    private RelDataType relDataType;
+
+
+    public RelDataType getRelDataType() {
+        return relDataType;
+    }
 
   /**
    * Creates an ElasticsearchTable.
@@ -303,19 +311,25 @@ public class ElasticsearchTable extends AbstractQueryableTable implements Transl
     return Linq4j.asEnumerable(hits.hits()).select(getter);
   }
 
-  @Override public RelDataType getRowType(RelDataTypeFactory relDataTypeFactory) {
+    @Override
+    public RelDataType getRowType(RelDataTypeFactory relDataTypeFactory) {
       List<String> names = new ArrayList<>();
       List<RelDataType> types = new ArrayList<>();
       for (Entry<String, Datatype> entry : transport.mapping.mapping().entrySet()) {
           names.add(entry.getKey());
           final Datatype datatype = entry.getValue();
           final ElasticsearchFieldType esFieldType = ElasticsearchFieldType.of(datatype.name());
-          types.add(esFieldType.toType((JavaTypeFactory)relDataTypeFactory));
+          final RelDataType relDataType = esFieldType.toType((JavaTypeFactory) relDataTypeFactory);
+
+          types.add(relDataType);
       }
-      return relDataTypeFactory.createStructType(Pair.zip(names, types));
+        final List<Pair<String, RelDataType>> pairList = Pair.zip(names, types);
+        this.relDataType = relDataTypeFactory.createStructType(pairList);
+        return relDataType;
   }
 
-  @Override public String toString() {
+    @Override
+    public String toString() {
     return "ElasticsearchTable{" + indexName + "}";
   }
 

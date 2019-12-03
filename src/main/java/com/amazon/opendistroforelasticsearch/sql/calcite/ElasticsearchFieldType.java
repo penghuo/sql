@@ -18,6 +18,7 @@ package com.amazon.opendistroforelasticsearch.sql.calcite;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.linq4j.tree.Primitive;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.type.BasicSqlType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,6 +60,7 @@ public enum  ElasticsearchFieldType {
     public RelDataType toType(JavaTypeFactory typeFactory) {
         RelDataType javaType = typeFactory.createJavaType(clazz);
         RelDataType sqlType = typeFactory.createSqlType(javaType.getSqlTypeName());
+
         return typeFactory.createTypeWithNullability(sqlType, true);
     }
 

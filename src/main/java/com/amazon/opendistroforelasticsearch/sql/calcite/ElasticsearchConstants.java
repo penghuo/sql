@@ -44,7 +44,7 @@ interface ElasticsearchConstants {
    * @return {@code true} if this field represents whole raw, {@code false} otherwise
    */
   static boolean isSelectAll(String name) {
-    return "_MAP".equals(name);
+    return "*".equals(name);
   }
 
 }

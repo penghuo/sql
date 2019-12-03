@@ -51,7 +51,7 @@ import java.util.List;
  */
 class ElasticsearchRules {
   static final RelOptRule[] RULES = {
-      ElasticsearchSortRule.INSTANCE,
+//      ElasticsearchSortRule.INSTANCE,
       ElasticsearchFilterRule.INSTANCE,
       ElasticsearchProjectRule.INSTANCE,
       ElasticsearchAggregateRule.INSTANCE
