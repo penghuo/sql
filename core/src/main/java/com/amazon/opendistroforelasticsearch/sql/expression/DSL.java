@@ -19,7 +19,6 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.UtilityClass;
 
 import java.util.Arrays;
 
@@ -41,5 +40,13 @@ public class DSL {
 
     public FunctionExpression xor(Expression... expressions) {
         return repository.compile(BuiltinFunctionName.XOR.getName(), Arrays.asList(expressions));
+    }
+
+    public FunctionExpression not(Expression... expressions) {
+        return repository.compile(BuiltinFunctionName.NOT.getName(), Arrays.asList(expressions));
+    }
+
+    public FunctionExpression equal(Expression... expressions) {
+        return repository.compile(BuiltinFunctionName.EQUAL.getName(), Arrays.asList(expressions));
     }
 }

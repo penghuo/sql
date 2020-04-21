@@ -38,7 +38,6 @@ public class BinaryPredicateFunction {
         repository.register(or());
         repository.register(xor());
         repository.register(equal());
-        repository.register(notEqual());
     }
 
     private static FunctionResolver and() {
@@ -84,23 +83,6 @@ public class BinaryPredicateFunction {
                         Boolean::equals,
                         List::equals,
                         Map::equals
-                )
-        );
-    }
-
-    private static FunctionResolver notEqual() {
-        return new FunctionResolver(
-                BuiltinFunctionName.NOTEQUAL.getName(),
-                predicateFunction(
-                        BuiltinFunctionName.NOTEQUAL.getName(),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2),
-                        (v1, v2) -> !v1.equals(v2)
                 )
         );
     }

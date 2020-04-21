@@ -19,6 +19,8 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprValueEnv;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionExpressionBuilder;
@@ -52,13 +54,13 @@ public class UnaryPredicateFunction {
             ExprType returnType) {
         return arguments -> new FunctionExpression(functionName, arguments) {
             @Override
-            public ExprValue valueOf() {
-                ExprValue arg1 = arguments.get(0).valueOf();
+            public ExprValue valueOf(ExprValueEnv env) {
+                ExprValue arg1 = arguments.get(0).valueOf(env);
                 return ExprValueUtils.fromObjectValue(predicate.test(getBooleanValue(arg1)));
             }
 
             @Override
-            public ExprType type() {
+            public ExprType type(ExprTypeEnv env) {
                 return returnType;
             }
         };

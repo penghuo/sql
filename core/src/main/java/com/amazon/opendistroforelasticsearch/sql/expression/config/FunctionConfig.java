@@ -16,11 +16,13 @@
 package com.amazon.opendistroforelasticsearch.sql.expression.config;
 
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.expression.scalar.arthmetic.ArithmeticFunction;
 import com.amazon.opendistroforelasticsearch.sql.expression.scalar.conversion.ToStringFunction;
 import com.amazon.opendistroforelasticsearch.sql.expression.scalar.predicate.BinaryPredicateFunction;
 import com.amazon.opendistroforelasticsearch.sql.expression.scalar.predicate.UnaryPredicateFunction;
+import com.google.common.collect.ImmutableMap;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,10 +30,14 @@ import java.util.HashMap;
 
 @Configuration
 public class FunctionConfig {
+    @Bean
+    public ExprTypeEnv typeEnv() {
+        return new ExprTypeEnv(ImmutableMap.of());
+    }
 
     @Bean
-    public BuiltinFunctionRepository functionRepository() {
-        BuiltinFunctionRepository builtinFunctionRepository = new BuiltinFunctionRepository(new HashMap<>());
+    public BuiltinFunctionRepository functionRepository(ExprTypeEnv typeEnv) {
+        BuiltinFunctionRepository builtinFunctionRepository = new BuiltinFunctionRepository(new HashMap<>(), typeEnv);
         ArithmeticFunction.register(builtinFunctionRepository);
         ToStringFunction.register(builtinFunctionRepository);
         BinaryPredicateFunction.register(builtinFunctionRepository);

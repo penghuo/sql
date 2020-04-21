@@ -4,6 +4,7 @@ package com.amazon.opendistroforelasticsearch.sql.expression.function;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BuiltinFunctionRepository {
     private final Map<FunctionName, FunctionResolver> functionResolverMap;
+    private final ExprTypeEnv env;
 
     /**
      * Register {@link FunctionResolver} to the Builtin Function Repository.
@@ -35,7 +37,7 @@ public class BuiltinFunctionRepository {
      */
     public FunctionExpression compile(FunctionName functionName, List<Expression> expressions) {
         FunctionExpressionBuilder resolvedFunctionBuilder = resolve(new FunctionSignature(functionName,
-                expressions.stream().map(Expression::type).collect(Collectors.toList())));
+                expressions.stream().map(expression -> expression.type(env)).collect(Collectors.toList())));
         return resolvedFunctionBuilder.apply(expressions);
     }
 

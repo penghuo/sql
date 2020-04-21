@@ -17,6 +17,8 @@ package com.amazon.opendistroforelasticsearch.sql.expression;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprValueEnv;
 import com.amazon.opendistroforelasticsearch.sql.expression.visitor.ExpressionVisitor;
 import lombok.RequiredArgsConstructor;
 
@@ -25,12 +27,12 @@ public class LiteralExpression implements Expression {
     private final ExprValue exprValue;
 
     @Override
-    public ExprValue valueOf() {
+    public ExprValue valueOf(ExprValueEnv env) {
         return exprValue;
     }
 
     @Override
-    public ExprType type() {
+    public ExprType type(ExprTypeEnv env) {
         return exprValue.type();
     }
 

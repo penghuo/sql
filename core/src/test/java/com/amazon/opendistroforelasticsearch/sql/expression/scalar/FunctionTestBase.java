@@ -13,37 +13,35 @@
  *   permissions and limitations under the License.
  */
 
-package com.amazon.opendistroforelasticsearch.sql.expression.scalar.conversion;
+package com.amazon.opendistroforelasticsearch.sql.expression.scalar;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
-import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.config.FunctionConfig;
-import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
-import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
-import org.junit.jupiter.api.Test;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprValueEnv;
+import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {FunctionConfig.class})
-class ToStringFunctionTest {
+public class FunctionTestBase {
     @Autowired
-    private BuiltinFunctionRepository repository;
+    protected DSL dsl;
 
-    @Test
-    public void tostring() {
-        FunctionExpression hex = repository.compile(BuiltinFunctionName.TOSTRING.getName(),
-                Arrays.asList(DSL.literal(ExprValueUtils.integerValue(15)),
-                        DSL.literal(ExprValueUtils.stringValue("hex"))));
-        assertEquals(ExprType.STRING, hex.type(null));
-        assertEquals("0xF", hex.valueOf(null).value());
+    private ExprValueEnv emptyValueEnv = new ExprValueEnv(ImmutableMap.of());
+
+    private ExprTypeEnv emptyTypeEnv = new ExprTypeEnv(ImmutableMap.of());
+
+    protected ExprValueEnv emptyValueEnv() {
+        return emptyValueEnv;
+    }
+
+    protected ExprTypeEnv emptyTypeEnv() {
+        return emptyTypeEnv;
     }
 }

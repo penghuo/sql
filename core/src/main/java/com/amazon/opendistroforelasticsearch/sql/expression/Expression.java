@@ -17,22 +17,28 @@ package com.amazon.opendistroforelasticsearch.sql.expression;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprValueEnv;
 import com.amazon.opendistroforelasticsearch.sql.expression.visitor.ExpressionVisitor;
 
+/**
+ * The definition of the resolved expression.
+ */
 public interface Expression {
 
     /**
-     * Evaluate the value of expression.
-     * @return
+     * Evaluate the value of expression in the value environment
      */
-    ExprValue valueOf();
+    ExprValue valueOf(ExprValueEnv valueEnv);
 
     /**
-     * Evaluate the type of expression.
-     * @return
+     * Evaluate the type of expression in the type environment
      */
-    ExprType type();
+    ExprType type(ExprTypeEnv typeEnv);
 
 
+    /**
+     * accept the {@link ExpressionVisitor}
+     */
     <R, C> R accept(ExpressionVisitor<R, C> visitor, C context);
 }

@@ -20,6 +20,9 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprValueEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionExpressionBuilder;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionName;
@@ -34,10 +37,9 @@ import java.util.Map;
  * tostring(X,Y)
  */
 public class ToStringFunction {
-    public static final FunctionName TOSTRING = FunctionName.of("tostring");
-
     public static void register(BuiltinFunctionRepository repository) {
-        repository.register(new FunctionResolver(TOSTRING, tostring(TOSTRING)));
+        repository.register(new FunctionResolver(BuiltinFunctionName.TOSTRING.getName(),
+                tostring(BuiltinFunctionName.TOSTRING.getName())));
     }
 
     private static Map<FunctionSignature, FunctionExpressionBuilder> tostring(FunctionName functionName) {
@@ -59,20 +61,20 @@ public class ToStringFunction {
                                                       ExprType returnType) {
         return arguments -> new FunctionExpression(functionName, arguments) {
             @Override
-            public ExprValue valueOf() {
+            public ExprValue valueOf(ExprValueEnv env) {
                 Expression x = arguments.get(0);
                 Expression y = arguments.get(1);
-                String opt = (String) y.valueOf().value();
+                String opt = (String) y.valueOf(env).value();
                 if (opt.equalsIgnoreCase("hex")) {
                     return ExprValueUtils.stringValue(
-                            String.format("0x%X", x.valueOf().value()));
+                            String.format("0x%X", x.valueOf(env).value()));
                 } else {
-                    return ExprValueUtils.stringValue(x.valueOf().toString());
+                    return ExprValueUtils.stringValue(x.valueOf(env).toString());
                 }
             }
 
             @Override
-            public ExprType type() {
+            public ExprType type(ExprTypeEnv env) {
                 return returnType;
             }
         };

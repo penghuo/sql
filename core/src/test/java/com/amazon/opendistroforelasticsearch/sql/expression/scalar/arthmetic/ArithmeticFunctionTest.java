@@ -65,8 +65,8 @@ class ArithmeticFunctionTest {
         FunctionExpression expression = functionRepository.compile(builtinFunctionName.getName(),
                 Arrays.asList(DSL.literal(op1), DSL.literal(op2)));
         ExprType expectedType = WideningTypeRule.max(op1.type(), op2.type());
-        assertEquals(expectedType, expression.type());
-        assertValueEqual(builtinFunctionName, expectedType, op1, op2, expression.valueOf());
+        assertEquals(expectedType, expression.type(null));
+        assertValueEqual(builtinFunctionName, expectedType, op1, op2, expression.valueOf(null));
     }
 
     protected void assertValueEqual(BuiltinFunctionName builtinFunctionName, ExprType type, ExprValue op1,

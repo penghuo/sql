@@ -17,6 +17,8 @@ package com.amazon.opendistroforelasticsearch.sql.expression.function;
 
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,9 +50,11 @@ class BuiltinFunctionRepositoryTest {
     @Mock
     private Expression mockExpression;
 
+    private ExprTypeEnv emptyEnv = new ExprTypeEnv(ImmutableMap.of());
+
     @Test
     void register() {
-        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
+        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap, emptyEnv);
         when(mockfunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
         repo.register(mockfunctionResolver);
 
@@ -59,7 +63,7 @@ class BuiltinFunctionRepositoryTest {
 
     @Test
     void compile() {
-        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
+        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap, emptyEnv);
         when(mockfunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
         when(mockfunctionResolver.resolve(any())).thenReturn(functionExpressionBuilder);
         when(mockMap.containsKey(any())).thenReturn(true);
@@ -73,7 +77,7 @@ class BuiltinFunctionRepositoryTest {
     @Test
     @DisplayName("resolve registered function should pass")
     void resolve() {
-        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
+        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap, emptyEnv);
         when(functionSignature.getFunctionName()).thenReturn(mockFunctionName);
         when(mockfunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
         when(mockfunctionResolver.resolve(functionSignature)).thenReturn(functionExpressionBuilder);
@@ -87,7 +91,7 @@ class BuiltinFunctionRepositoryTest {
     @Test
     @DisplayName("resolve unregistered function should throw exception")
     void resolve_unregistered() {
-        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
+        BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap, emptyEnv);
         when(mockMap.containsKey(any())).thenReturn(false);
         repo.register(mockfunctionResolver);
 

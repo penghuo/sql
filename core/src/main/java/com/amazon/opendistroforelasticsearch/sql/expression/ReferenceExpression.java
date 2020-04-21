@@ -17,6 +17,8 @@ package com.amazon.opendistroforelasticsearch.sql.expression;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprTypeEnv;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.ExprValueEnv;
 import com.amazon.opendistroforelasticsearch.sql.expression.visitor.ExpressionVisitor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +29,12 @@ public class ReferenceExpression implements Expression {
     private final String attr;
 
     @Override
-    public ExprValue valueOf() {
+    public ExprValue valueOf(ExprValueEnv env) {
         throw new RuntimeException("ExprReference valueOf");
     }
 
     @Override
-    public ExprType type() {
+    public ExprType type(ExprTypeEnv env) {
         throw new RuntimeException("ExprReference type");
     }
 
