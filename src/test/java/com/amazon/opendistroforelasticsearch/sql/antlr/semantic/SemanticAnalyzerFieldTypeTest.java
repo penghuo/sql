@@ -13,16 +13,11 @@
  *   permissions and limitations under the License.
  */
 
-package com.amazon.opendistroforelasticsearch.sql.unittest.rewriter.term;
+package com.amazon.opendistroforelasticsearch.sql.antlr.semantic;
 
-
-import com.alibaba.druid.sql.SQLUtils;
-import com.alibaba.druid.sql.ast.expr.SQLQueryExpr;
+import com.amazon.opendistroforelasticsearch.sql.antlr.OpenDistroSqlAnalyzer;
+import com.amazon.opendistroforelasticsearch.sql.antlr.SqlAnalysisConfig;
 import com.amazon.opendistroforelasticsearch.sql.esdomain.LocalClusterState;
-import com.amazon.opendistroforelasticsearch.sql.rewriter.matchtoterm.TermFieldRewriter;
-import com.amazon.opendistroforelasticsearch.sql.rewriter.matchtoterm.VerificationException;
-import com.amazon.opendistroforelasticsearch.sql.util.MatcherUtils;
-import com.amazon.opendistroforelasticsearch.sql.util.SqlParserUtils;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
@@ -30,24 +25,29 @@ import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import static com.amazon.opendistroforelasticsearch.sql.util.CheckScriptContents.createParser;
 import static com.amazon.opendistroforelasticsearch.sql.util.CheckScriptContents.mockIndexNameExpressionResolver;
 import static com.amazon.opendistroforelasticsearch.sql.util.CheckScriptContents.mockSqlSettings;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.Matchers.allOf;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class TermFieldRewriterTest {
+public class SemanticAnalyzerFieldTypeTest {
+    private OpenDistroSqlAnalyzer analyzer = new OpenDistroSqlAnalyzer(new SqlAnalysisConfig(true, true, 1000));
+
     private final static String INDEX_ACCOUNT_1 = "account1";
     private final static String INDEX_ACCOUNT_2 = "account2";
     private final static String INDEX_ACCOUNT_ALL = "account*";
@@ -143,69 +143,24 @@ public class TermFieldRewriterTest {
                 .build());
     }
 
-    @Test
-    public void testFromSubqueryShouldPass() {
-        String sql = "SELECT t.age as a FROM (SELECT age FROM account1 WHERE employer = 'david') t";
-        String expected = "SELECT t.age as a FROM (SELECT age FROM account1 WHERE employer.keyword = 'david') t";
-
-        assertThat(rewriteTerm(sql),
-                MatcherUtils.IsEqualIgnoreCaseAndWhiteSpace.equalToIgnoreCaseAndWhiteSpace(expected));
-    }
 
     @Test
-    public void testFromSubqueryWithoutTermShouldPass() {
-        String sql = "SELECT t.age as a FROM (SELECT age FROM account1 WHERE age = 10) t";
-        String expected = sql;
-
-        assertThat(rewriteTerm(sql),
-                MatcherUtils.IsEqualIgnoreCaseAndWhiteSpace.equalToIgnoreCaseAndWhiteSpace(expected));
+    public void fieldTypeConflict() {
+        expectValidationFailWithErrorMessages("SELECT employer FROM account* WHERE employer = 'bob'");
     }
 
-    @Test
-    public void testFieldShouldBeRewritten() {
-        String sql = "SELECT age FROM account1 WHERE employer = 'bob'";
-        String expected = "SELECT age FROM account1 WHERE employer.keyword = 'bob'";
 
-        assertThat(rewriteTerm(sql),
-                MatcherUtils.IsEqualIgnoreCaseAndWhiteSpace.equalToIgnoreCaseAndWhiteSpace(expected));
+    protected void validate(String sql) {
+        analyzer.analyze(sql, LocalClusterState.state());
     }
 
-    @Test
-    public void testSelectTheFieldWithCompatibleMappingShouldPass() {
-        String sql = "SELECT age FROM account* WHERE age = 10";
-        String expected = sql;
-
-        assertThat(rewriteTerm(sql),
-                MatcherUtils.IsEqualIgnoreCaseAndWhiteSpace.equalToIgnoreCaseAndWhiteSpace(expected));
+    protected void expectValidationFailWithErrorMessages(String query, String... messages) {
+        exception.expect(SemanticAnalysisException.class);
+        exception.expectMessage(allOf(Arrays.stream(messages).
+                map(Matchers::containsString).
+                collect(toList())));
+        validate(query);
     }
-
-    @Test
-    public void testSelectAllFieldWithConflictMappingThrowException() {
-        String sql = "SELECT count(*) FROM account* WHERE age = 10";
-        String expected = sql;
-
-        assertThat(rewriteTerm(sql),
-                MatcherUtils.IsEqualIgnoreCaseAndWhiteSpace.equalToIgnoreCaseAndWhiteSpace(expected));
-    }
-
-    @Test
-    public void testSelectTheFieldWithConflictMappingShouldThrowException() {
-        String sql = "SELECT employer FROM account* WHERE employer = 'bob'";
-        exception.expect(VerificationException.class);
-        exception.expectMessage("Different mappings are not allowed for the same field[employer]: found [{type:nested,properties:{salary:{type:integer},depto:{type:integer}}}] and [{type:text,fields:{keyword:{type:keyword,ignore_above:256}}}] ");
-        rewriteTerm(sql);
-    }
-
-    private String rewriteTerm(String sql) {
-        SQLQueryExpr sqlQueryExpr = SqlParserUtils.parse(sql);
-        sqlQueryExpr.accept(new TermFieldRewriter());
-        return SQLUtils.toMySqlString(sqlQueryExpr)
-                .replaceAll("[\\n\\t]+", " ")
-                .replaceAll("^\\(", " ")
-                .replaceAll("\\)$", " ")
-                .trim();
-    }
-
 
     public static void mockLocalClusterState(Map<String, ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>>> indexMapping) {
         LocalClusterState.state().setClusterService(mockClusterService(indexMapping));
