@@ -15,6 +15,10 @@
 
 package com.amazon.opendistroforelasticsearch.sql.data.model;
 
+import com.google.common.collect.ImmutableMap;
+
+import java.util.Map;
+
 /**
  * Expression Type.
  */
@@ -29,5 +33,18 @@ public enum ExprType {
     BOOLEAN,
     STRING,
     STRUCT,
-    ARRAY
+    ARRAY;
+
+    private static final Map<String, ExprType> ALL_BASE_TYPES;
+    static {
+        ImmutableMap.Builder<String, ExprType> builder = new ImmutableMap.Builder<>();
+        for (ExprType type : ExprType.values()) {
+            builder.put(type.name(), type);
+        }
+        ALL_BASE_TYPES = builder.build();
+    }
+
+    public static ExprType typeOf(String str) {
+        return ALL_BASE_TYPES.getOrDefault(str.toUpperCase(), UNKNOWN);
+    }
 }

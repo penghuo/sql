@@ -18,9 +18,13 @@
 package com.amazon.opendistroforelasticsearch.sql.planner;
 
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.AbstractPlanNodeVisitor;
+import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalAggregation;
+import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalFilter;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalJoin;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRelation;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.AggregationOperator;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.FilterOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.HashJoin;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
@@ -52,4 +56,20 @@ public class Planner extends AbstractPlanNodeVisitor<PhysicalPlan, Object> {
         return table.find(relation);
     }
 
+    @Override
+    public PhysicalPlan visitFilter(LogicalFilter plan, Object context) {
+        return new FilterOperator(
+                plan.getChild().get(0).accept(this, context),
+                plan.getCondition()
+        );
+    }
+
+    @Override
+    public PhysicalPlan visitAggregation(LogicalAggregation plan, Object context) {
+        return new AggregationOperator(
+                plan.getChild().get(0).accept(this, context),
+                plan.getAggExprs(),
+                plan.getGroupExprs()
+        );
+    }
 }

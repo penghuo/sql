@@ -20,10 +20,15 @@ import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationE
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
+import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.schema.Namespace;
 import com.amazon.opendistroforelasticsearch.sql.schema.Schema;
 import com.amazon.opendistroforelasticsearch.sql.schema.Symbol;
 import com.amazon.opendistroforelasticsearch.sql.schema.SymbolTable;
+import com.amazon.opendistroforelasticsearch.sql.storage.Metadata;
+import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
+import com.amazon.opendistroforelasticsearch.sql.storage.Table;
 import com.google.common.collect.ImmutableMap;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -54,6 +59,37 @@ public class TestConfig {
             .put("struct_value", ExprType.STRUCT)
             .put("array_value", ExprType.ARRAY)
             .build();
+
+
+    @Bean
+    protected StorageEngine storageEngine() {
+        return new StorageEngine() {
+            @Override
+            public ExprType getType(String name) {
+                return null;
+            }
+
+            @Override
+            public Table getTable(String name) {
+                return new Table() {
+                    @Override
+                    public Metadata getMetaData() {
+                        return null;
+                    }
+
+                    @Override
+                    public PhysicalPlan find(LogicalPlan plan) {
+                        return null;
+                    }
+
+                    @Override
+                    public Map<String, ExprType> getFieldTypes() {
+                        return typeMapping;
+                    }
+                };
+            }
+        };
+    }
 
 
     @Bean

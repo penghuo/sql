@@ -17,6 +17,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.storage.file;
 
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.AbstractPlanNodeVisitor;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRelation;
@@ -26,11 +27,13 @@ import com.amazon.opendistroforelasticsearch.sql.planner.physical.TableScan;
 import com.amazon.opendistroforelasticsearch.sql.storage.BindingTuple;
 import com.amazon.opendistroforelasticsearch.sql.storage.Metadata;
 import com.amazon.opendistroforelasticsearch.sql.storage.Table;
+import com.google.common.collect.ImmutableMap;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class FileTable implements Table {
@@ -76,6 +79,11 @@ public class FileTable implements Table {
                 };
             }
         }, null);
+    }
+
+    @Override
+    public Map<String, ExprType> getFieldTypes() {
+        return ImmutableMap.of();
     }
 
 }

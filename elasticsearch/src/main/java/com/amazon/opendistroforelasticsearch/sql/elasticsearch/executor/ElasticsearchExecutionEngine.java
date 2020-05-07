@@ -38,6 +38,7 @@ public class ElasticsearchExecutionEngine implements ExecutionEngine {
         Runnable task = () -> {
             try {
                 List<BindingTuple> result = new ArrayList<>();
+                plan.open();
                 while (plan.hasNext()) {
                     result.add(plan.next());
                 }

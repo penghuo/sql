@@ -16,6 +16,7 @@
 package com.amazon.opendistroforelasticsearch.sql.analysis;
 
 import com.amazon.opendistroforelasticsearch.sql.ast.AbstractNodeVisitor;
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.AggregateFunction;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.And;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.EqualTo;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Literal;
@@ -25,6 +26,7 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
+import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.AvgAggregation;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -65,5 +67,15 @@ public class ExpressionAnalyzer extends AbstractNodeVisitor<Expression, Analysis
         Expression right = node.getRight().accept(this, context);
 
         return dsl.and(context.peek(), left, right);
+    }
+
+    @Override
+    public Expression visitAggregateFunction(AggregateFunction node, AnalysisContext context) {
+        switch (node.getFuncName().toUpperCase()) {
+            case "AVG":
+                return new AvgAggregation(node.getField().accept(this, context));
+            default:
+                throw new UnsupportedOperationException("unsupported aggregation " + node.getFuncName());
+        }
     }
 }

@@ -19,9 +19,14 @@ package com.amazon.opendistroforelasticsearch.sql.storage;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprMissingValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
+import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
+import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
+import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
+import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Singular;
 
 import java.util.Map;
@@ -34,7 +39,8 @@ import java.util.stream.Collectors;
 @Builder
 @Getter
 @EqualsAndHashCode
-public class BindingTuple {
+@RequiredArgsConstructor
+public class BindingTuple implements Environment<Expression, ExprValue> {
     @Singular("binding")
     private final Map<String, ExprValue> bindingMap;
 
@@ -49,6 +55,16 @@ public class BindingTuple {
     }
 
     @Override
+    public ExprValue resolve(Expression var) {
+        if(var instanceof ReferenceExpression) {
+            return resolve(((ReferenceExpression) var).getAttr());
+        } else {
+            throw new ExpressionEvaluationException("can't resolve expression");
+        }
+    }
+
+
+    @Override
     public String toString() {
         return bindingMap.entrySet()
                 .stream()
@@ -61,4 +77,6 @@ public class BindingTuple {
         map.forEach((key, value) -> bindingTupleBuilder.binding(key, ExprValueUtils.fromObjectValue(value)));
         return bindingTupleBuilder.build();
     }
+
+
 }

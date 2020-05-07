@@ -20,12 +20,11 @@ import com.amazon.opendistroforelasticsearch.sql.elasticsearch.executor.Elastics
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.security.SecurityAccess;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.ElasticsearchStorageEngine;
 import com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine;
+import com.amazon.opendistroforelasticsearch.sql.executor.ResponseListener;
 import com.amazon.opendistroforelasticsearch.sql.plugin.request.PPLQueryRequestFactory;
 import com.amazon.opendistroforelasticsearch.sql.ppl.PPLService;
-import com.amazon.opendistroforelasticsearch.sql.executor.ResponseListener;
 import com.amazon.opendistroforelasticsearch.sql.ppl.antlr.PPLSyntaxParser;
 import com.amazon.opendistroforelasticsearch.sql.ppl.config.PPLServiceConfig;
-import com.amazon.opendistroforelasticsearch.sql.ppl.domain.PPLQueryResponse;
 import com.amazon.opendistroforelasticsearch.sql.query.QueryEngine;
 import com.amazon.opendistroforelasticsearch.sql.storage.BindingTuple;
 import com.amazon.opendistroforelasticsearch.sql.storage.HybridStorageEngine;
@@ -69,7 +68,8 @@ public class RestPPLQueryAction extends BaseRestHandler {
         //PPLService pplService = context.getBean(PPLService.class);
 
         StorageEngine fileStorageEngine = new FileStorageEngine(getDatabaseFileContent());
-        StorageEngine esStorageEngine = new ElasticsearchStorageEngine(client); // TODO: client is per-request. how to make PPLService long living?
+        // TODO: client is per-request. how to make PPLService long living?
+        StorageEngine esStorageEngine = new ElasticsearchStorageEngine(client);
         StorageEngine storageEngine = new HybridStorageEngine(fileStorageEngine, esStorageEngine);
 
         QueryEngine queryEngine = new QueryEngine(new PPLSyntaxParser(), storageEngine);
@@ -83,10 +83,10 @@ public class RestPPLQueryAction extends BaseRestHandler {
                     @Override
                     public void onResponse(List<BindingTuple> result) {
                         channel.sendResponse(new BytesRestResponse(
-                            OK, "application/json; charset=UTF-8",
-                            result.stream().
-                                   map(BindingTuple::toString).
-                                   collect(Collectors.joining("\n\t", "[\n\t", "\n]\n"))));
+                                OK, "application/json; charset=UTF-8",
+                                result.stream().
+                                        map(BindingTuple::toString).
+                                        collect(Collectors.joining("\n\t", "[\n\t", "\n]\n"))));
                     }
 
                     @Override
@@ -102,25 +102,25 @@ public class RestPPLQueryAction extends BaseRestHandler {
     // Because of ES sandbox, this is only for demo.
     private String getDatabaseFileContent() {
         return "{\n" +
-            "  \"hr\": {\n" +
-            "    \"employees\": [\n" +
-            "      {\n" +
-            "        \"id\": 3,\n" +
-            "        \"name\": \"Bob Smith\",\n" +
-            "        \"title\": null\n" +
-            "      },\n" +
-            "      {\n" +
-            "        \"id\": 4,\n" +
-            "        \"name\": \"Susan Smith\",\n" +
-            "        \"title\": \"Dev Mgr\"\n" +
-            "      },\n" +
-            "      {\n" +
-            "        \"id\": 6,\n" +
-            "        \"name\": \"Jane Smith\",\n" +
-            "        \"title\": \"Software Eng 2\"\n" +
-            "      }\n" +
-            "    ]\n" +
-            "  }\n" +
-            "}";
+                "  \"hr\": {\n" +
+                "    \"employees\": [\n" +
+                "      {\n" +
+                "        \"id\": 3,\n" +
+                "        \"name\": \"Bob Smith\",\n" +
+                "        \"title\": null\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"id\": 4,\n" +
+                "        \"name\": \"Susan Smith\",\n" +
+                "        \"title\": \"Dev Mgr\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"id\": 6,\n" +
+                "        \"name\": \"Jane Smith\",\n" +
+                "        \"title\": \"Software Eng 2\"\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "}";
     }
 }

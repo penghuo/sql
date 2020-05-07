@@ -16,17 +16,25 @@
 package com.amazon.opendistroforelasticsearch.sql.analysis;
 
 import com.amazon.opendistroforelasticsearch.sql.ast.AbstractNodeVisitor;
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.UnresolvedExpression;
+import com.amazon.opendistroforelasticsearch.sql.ast.tree.Aggregation;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Filter;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Join;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Relation;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.UnresolvedPlan;
+import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
+import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalAggregation;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalFilter;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalJoin;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRelation;
 import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
+import com.amazon.opendistroforelasticsearch.sql.storage.Table;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Analyze the {@link UnresolvedPlan} in the {@link AnalysisContext} to construct the {@link LogicalPlan}
@@ -44,8 +52,8 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
     public LogicalPlan visitRelation(Relation node, AnalysisContext context) {
         context.push();
         TypeEnvironment curEnv = context.peek();
-        //SymbolTable symbolTable = schema.resolveSymbolTable(node.getTableName());
-        //symbolTable.lookupAll(Namespace.FIELD_NAME).forEach((k, v) -> curEnv.define(DSL.ref(k), v));
+        Table table = storageEngine.getTable(node.getTableName());
+        table.getFieldTypes().forEach((k, v) -> curEnv.define(DSL.ref(k), v));
         return new LogicalRelation(node.getTableName());
     }
 
@@ -59,11 +67,23 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
     @Override
     public LogicalPlan visitJoin(Join node, AnalysisContext context) {
         return new LogicalJoin(
-            node.getChildren().get(0).accept(this, context),
-            node.getChildren().get(1).accept(this, context),
-            node.getJoinType(),
-            node.getJoinFieldNames()
+                node.getChildren().get(0).accept(this, context),
+                node.getChildren().get(1).accept(this, context),
+                node.getJoinType(),
+                node.getJoinFieldNames()
         );
     }
 
+    @Override
+    public LogicalPlan visitAggregation(Aggregation node, AnalysisContext context) {
+        return new LogicalAggregation(
+                node.getChild().get(0).accept(this, context),
+                visitExpressions(node.getAggExprList(), context),
+                visitExpressions(node.getGroupExprList(), context)
+        );
+    }
+
+    List<Expression> visitExpressions(List<UnresolvedExpression> expressions, AnalysisContext context) {
+        return expressions.stream().map(expr -> expressionAnalyzer.analyze(expr, context)).collect(Collectors.toList());
+    }
 }

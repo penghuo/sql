@@ -23,6 +23,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.config.ExpressionCon
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import com.amazon.opendistroforelasticsearch.sql.schema.Schema;
 import com.amazon.opendistroforelasticsearch.sql.schema.SymbolTable;
+import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -52,8 +53,8 @@ public class AnalyzerTestBase {
     protected Environment<Expression, ExprType> typeEnv;
 
     @Bean
-    protected Analyzer analyzer(ExpressionAnalyzer expressionAnalyzer, Schema schema) {
-        return new Analyzer(expressionAnalyzer, schema);
+    protected Analyzer analyzer(ExpressionAnalyzer expressionAnalyzer, StorageEngine engine) {
+        return new Analyzer(expressionAnalyzer, engine);
     }
 
     @Bean

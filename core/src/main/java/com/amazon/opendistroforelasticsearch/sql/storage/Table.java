@@ -17,8 +17,11 @@
 
 package com.amazon.opendistroforelasticsearch.sql.storage;
 
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
+
+import java.util.Map;
 
 /**
  * Table
@@ -33,6 +36,11 @@ public interface Table {
 
         @Override
         public PhysicalPlan find(LogicalPlan plan) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Map<String, ExprType> getFieldTypes() {
             throw new UnsupportedOperationException();
         }
     };
@@ -57,5 +65,11 @@ public interface Table {
     // Create/drop table
     // Insert/delete/update data
     //  to support other DML, DDL and materialization
+
+
+    /**
+     * Populate Field Types.
+     */
+    Map<String, ExprType> getFieldTypes();
 
 }

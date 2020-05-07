@@ -17,6 +17,7 @@ package com.amazon.opendistroforelasticsearch.sql.planner.logical;
 
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
@@ -30,6 +31,7 @@ import java.util.List;
 @EqualsAndHashCode
 @RequiredArgsConstructor
 public class LogicalFilter extends LogicalPlan {
+    @Getter
     private final Expression condition;
     private final LogicalPlan child;
 

@@ -44,4 +44,7 @@ public abstract class AbstractPlanNodeVisitor<R, C> implements PlanNodeVisitor<R
         return visitNode(plan, context);
     }
 
+    public R visitAggregation(LogicalAggregation plan, C context) {
+        return visitNode(plan, context);
+    }
 }

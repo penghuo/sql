@@ -37,5 +37,7 @@ public abstract class PhysicalPlan implements PlanNode<PhysicalPlan>,
 
     public abstract <R, C> R accept(PhysicalPlanNodeVisitor<R, C> visitor, C context);
 
+    public void open() {
 
+    }
 }

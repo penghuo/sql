@@ -34,7 +34,7 @@ import java.util.HashMap;
 @Configuration
 public class ExpressionConfig {
     @Bean
-    public BuiltinFunctionRepository functionRepository(Environment<Expression, ExprType> typeEnv) {
+    public BuiltinFunctionRepository functionRepository() {
         BuiltinFunctionRepository builtinFunctionRepository = new BuiltinFunctionRepository(new HashMap<>());
         ArithmeticFunction.register(builtinFunctionRepository);
         BinaryPredicateFunction.register(builtinFunctionRepository);

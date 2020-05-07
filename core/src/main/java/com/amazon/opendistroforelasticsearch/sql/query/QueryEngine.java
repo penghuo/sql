@@ -23,6 +23,9 @@ import com.amazon.opendistroforelasticsearch.sql.analysis.ExpressionAnalyzer;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.UnresolvedPlan;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
+import com.amazon.opendistroforelasticsearch.sql.expression.scalar.arthmetic.ArithmeticFunction;
+import com.amazon.opendistroforelasticsearch.sql.expression.scalar.predicate.BinaryPredicateFunction;
+import com.amazon.opendistroforelasticsearch.sql.expression.scalar.predicate.UnaryPredicateFunction;
 import com.amazon.opendistroforelasticsearch.sql.planner.Planner;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
@@ -43,14 +46,21 @@ public class QueryEngine {
 
         // Analyzing: AST -> Logical plan
         Analyzer analyzer = new Analyzer(new ExpressionAnalyzer(
-                                            new DSL(
-                                                new BuiltinFunctionRepository(new HashMap<>()))),
-                                         storageEngine);
+                new DSL(functionRepository())),
+                storageEngine);
         LogicalPlan logicalPlan = analyzer.analyze(ast, new AnalysisContext());
 
         // Planning: Logical -> Physical plan
         Planner planner = new Planner(storageEngine);
         return planner.plan(logicalPlan);
+    }
+
+    public BuiltinFunctionRepository functionRepository() {
+        BuiltinFunctionRepository builtinFunctionRepository = new BuiltinFunctionRepository(new HashMap<>());
+        ArithmeticFunction.register(builtinFunctionRepository);
+        BinaryPredicateFunction.register(builtinFunctionRepository);
+        UnaryPredicateFunction.register(builtinFunctionRepository);
+        return builtinFunctionRepository;
     }
 
 }
