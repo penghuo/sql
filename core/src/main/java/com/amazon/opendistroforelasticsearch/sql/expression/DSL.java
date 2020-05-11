@@ -17,6 +17,7 @@ package com.amazon.opendistroforelasticsearch.sql.expression;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.Aggregator;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
@@ -74,5 +75,9 @@ public class DSL {
 
     public FunctionExpression equal(Environment<Expression, ExprType> env, Expression... expressions) {
         return repository.compile(BuiltinFunctionName.EQUAL.getName(), Arrays.asList(expressions), env);
+    }
+
+    public Aggregator avg(Environment<Expression, ExprType> env, Expression... expressions) {
+
     }
 }

@@ -5,6 +5,7 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
+import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.Aggregator;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +39,13 @@ public class BuiltinFunctionRepository {
         return resolvedFunctionBuilder.apply(expressions);
     }
 
+    public Aggregator compile(FunctionName functionName, List<Expression> expressions,
+                              Environment<Expression, ExprType> env) {
+        FunctionExpressionBuilder resolvedFunctionBuilder = resolve(new FunctionSignature(functionName,
+                expressions.stream().map(expression -> expression.type(env)).collect(Collectors.toList())));
+        return resolvedFunctionBuilder.apply(expressions);
+    }
+
     /**
      * Resolve the {@link FunctionExpressionBuilder} in Builtin Function Repository.
      *
@@ -53,4 +61,6 @@ public class BuiltinFunctionRepository {
                     String.format("unsupported function name: %s", functionName.getFunctionName()));
         }
     }
+
+
 }
