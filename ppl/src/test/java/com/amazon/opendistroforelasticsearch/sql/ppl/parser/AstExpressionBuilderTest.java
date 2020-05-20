@@ -15,6 +15,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.ppl.parser;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.agg;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.aggregate;
@@ -94,7 +95,7 @@ public class AstExpressionBuilderTest extends AstBuilderTest{
                 ));
     }
 
-    @Test
+    @Ignore("this is invalid case, source shouldn't include function expression.")
     public void testEvalExpr() {
         assertEqual("source=t f=abs(a)",
                 filter(
