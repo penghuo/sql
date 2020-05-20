@@ -21,6 +21,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -74,12 +75,14 @@ class PhysicalPlanNodeVisitorTest extends PhysicalPlanTestBase {
             aggregation, ImmutableMap.of(DSL.ref("ivalue"), DSL.ref("avg(response)")));
     PhysicalPlan project = PhysicalPlanDSL.project(plan, ref);
     PhysicalPlan remove = PhysicalPlanDSL.remove(plan, ref);
+    PhysicalPlan eval = PhysicalPlanDSL.eval(plan, Pair.of(ref, ref));
 
     assertNull(filter.accept(new PhysicalPlanNodeVisitor<Integer, Object>() {}, null));
     assertNull(aggregation.accept(new PhysicalPlanNodeVisitor<Integer, Object>() {}, null));
     assertNull(rename.accept(new PhysicalPlanNodeVisitor<Integer, Object>() {}, null));
     assertNull(project.accept(new PhysicalPlanNodeVisitor<Integer, Object>() {}, null));
     assertNull(remove.accept(new PhysicalPlanNodeVisitor<Integer, Object>() {}, null));
+    assertNull(eval.accept(new PhysicalPlanNodeVisitor<Integer, Object>() {}, null));
   }
 
   public static class PhysicalPlanPrinter extends PhysicalPlanNodeVisitor<String, Integer> {

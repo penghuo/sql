@@ -21,6 +21,7 @@ import com.amazon.opendistroforelasticsearch.sql.ast.expression.Argument;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Compare;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.DataType;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.EqualTo;
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.Let;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.UnresolvedExpression;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Field;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Function;
@@ -32,6 +33,7 @@ import com.amazon.opendistroforelasticsearch.sql.ast.expression.Or;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.QualifiedName;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.UnresolvedAttribute;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Aggregation;
+import com.amazon.opendistroforelasticsearch.sql.ast.tree.Eval;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Filter;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Rename;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.UnresolvedPlan;
@@ -55,6 +57,10 @@ public class AstDSL {
 
     public static UnresolvedPlan project(UnresolvedPlan input, UnresolvedExpression... projectList) {
         return new Project(Arrays.asList(projectList)).attach(input);
+    }
+
+    public static Eval eval(UnresolvedPlan input, Let... projectList) {
+        return new Eval(Arrays.asList(projectList)).attach(input);
     }
 
     public static UnresolvedPlan projectWithArg(UnresolvedPlan input, List<Argument> argList, UnresolvedExpression... projectList) {
@@ -84,6 +90,10 @@ public class AstDSL {
 
     private static Literal literal(Object value, DataType type) {
         return new Literal(value, type);
+    }
+
+    public static Let let(Field var, UnresolvedExpression expression) {
+        return new Let(var, expression);
     }
 
     public static Literal intLiteral(Integer value) {
@@ -154,7 +164,7 @@ public class AstDSL {
         return new Field((QualifiedName) field);
     }
 
-    public static UnresolvedExpression field(String field) {
+    public static Field field(String field) {
         return new Field(field);
     }
 

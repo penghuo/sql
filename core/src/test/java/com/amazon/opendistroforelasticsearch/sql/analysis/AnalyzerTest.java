@@ -174,12 +174,4 @@ class AnalyzerTest extends AnalyzerTestBase {
                 )
         ));
     }
-
-    protected void assertAnalyzeEqual(LogicalPlan expected, UnresolvedPlan unresolvedPlan) {
-        assertEquals(expected, analyze(unresolvedPlan));
-    }
-
-    protected LogicalPlan analyze(UnresolvedPlan unresolvedPlan) {
-        return analyzer.analyze(unresolvedPlan, analysisContext);
-    }
 }

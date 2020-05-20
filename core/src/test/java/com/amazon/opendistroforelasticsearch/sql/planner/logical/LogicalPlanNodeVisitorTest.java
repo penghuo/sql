@@ -24,6 +24,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.Aggregat
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -74,6 +75,7 @@ class LogicalPlanNodeVisitorTest {
         );
         LogicalPlan project = LogicalPlanDSL.project(relation, ref);
         LogicalPlan remove = LogicalPlanDSL.remove(relation, ref);
+        LogicalPlan eval = LogicalPlanDSL.eval(relation, Pair.of(ref, expression));
 
         assertNull(relation.accept(new LogicalPlanNodeVisitor<Integer, Object>() {
         }, null));
@@ -86,6 +88,8 @@ class LogicalPlanNodeVisitorTest {
         assertNull(project.accept(new LogicalPlanNodeVisitor<Integer, Object>() {
         }, null));
         assertNull(remove.accept(new LogicalPlanNodeVisitor<Integer, Object>() {
+        }, null));
+        assertNull(eval.accept(new LogicalPlanNodeVisitor<Integer, Object>() {
         }, null));
     }
 

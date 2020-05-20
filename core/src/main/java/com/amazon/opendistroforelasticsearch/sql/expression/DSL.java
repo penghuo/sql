@@ -15,6 +15,8 @@
 
 package com.amazon.opendistroforelasticsearch.sql.expression;
 
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprMissingValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprNullValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
@@ -34,12 +36,28 @@ public class DSL {
         return new LiteralExpression(ExprValueUtils.integerValue(value));
     }
 
+    public static LiteralExpression literal(Long value) {
+        return new LiteralExpression(ExprValueUtils.longValue(value));
+    }
+
+    public static LiteralExpression literal(Float value) {
+        return new LiteralExpression(ExprValueUtils.floatValue(value));
+    }
+
+    public static LiteralExpression literal(Double value) {
+        return new LiteralExpression(ExprValueUtils. doubleValue(value));
+    }
+
     public static LiteralExpression literal(ExprValue value) {
         return new LiteralExpression(value);
     }
 
     public static ReferenceExpression ref(String ref) {
         return new ReferenceExpression(ref);
+    }
+
+    public FunctionExpression abs(Environment<Expression, ExprType> env, Expression... expressions) {
+        return (FunctionExpression) repository.compile(BuiltinFunctionName.ABS.getName(), Arrays.asList(expressions), env);
     }
 
     public FunctionExpression add(Environment<Expression, ExprType> env, Expression... expressions) {

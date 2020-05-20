@@ -20,6 +20,7 @@ import com.amazon.opendistroforelasticsearch.sql.ast.expression.AggregateFunctio
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.And;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.EqualTo;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Field;
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.Function;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Literal;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.UnresolvedAttribute;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.UnresolvedExpression;
@@ -31,6 +32,9 @@ import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.Aggregator;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionName;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
@@ -88,6 +92,14 @@ public class ExpressionAnalyzer extends AbstractNodeVisitor<Expression, Analysis
         } else {
             throw new SemanticCheckException("Unsupported aggregation function " + node.getFuncName());
         }
+    }
+
+    @Override
+    public Expression visitFunction(Function node, AnalysisContext context) {
+        FunctionName functionName = FunctionName.of(node.getFuncName());
+        List<Expression> arguments = node.getFuncArgs().stream()
+                .map(unresolvedExpression -> analyze(unresolvedExpression, context)).collect(Collectors.toList());
+        return (Expression) repository.compile(functionName, arguments, context.peek());
     }
 
     @Override

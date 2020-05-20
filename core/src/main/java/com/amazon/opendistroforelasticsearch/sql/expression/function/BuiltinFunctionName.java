@@ -13,6 +13,7 @@ import java.util.Optional;
 @Getter
 @RequiredArgsConstructor
 public enum BuiltinFunctionName {
+    ABS(FunctionName.of("abs")),
     ADD(FunctionName.of("add")),
     SUBTRACT(FunctionName.of("subtract")),
     MULTIPLY(FunctionName.of("multiply")),

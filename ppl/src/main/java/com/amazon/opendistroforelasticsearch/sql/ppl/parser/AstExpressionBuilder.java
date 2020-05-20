@@ -18,9 +18,9 @@ package com.amazon.opendistroforelasticsearch.sql.ppl.parser;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Argument;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Compare;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Field;
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.Let;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.QualifiedName;
 import com.amazon.opendistroforelasticsearch.sql.common.utils.StringUtils;
-import com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser;
 import com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParserBaseVisitor;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.AggregateFunction;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.And;
@@ -34,11 +34,13 @@ import com.amazon.opendistroforelasticsearch.sql.ast.expression.Not;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.Or;
 import com.amazon.opendistroforelasticsearch.sql.ppl.utils.ArgumentFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 import static com.amazon.opendistroforelasticsearch.sql.common.utils.StringUtils.unquoteIdentifier;
+import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.BinaryArithmeticContext;
 import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.BooleanLiteralContext;
 import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.CompareExprContext;
 import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.DecimalLiteralContext;
@@ -56,6 +58,7 @@ import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDis
 import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.StatsFunctionCallContext;
 import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.StringLiteralContext;
 import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.WcFieldExpressionContext;
+import static com.amazon.opendistroforelasticsearch.sql.ppl.antlr.parser.OpenDistroPPLParser.WcQualifiedNameContext;
 
 /**
  * Class of building AST Expression nodes
@@ -81,9 +84,9 @@ public class AstExpressionBuilder extends OpenDistroPPLParserBaseVisitor<Unresol
     /** Eval expression */
     @Override
     public UnresolvedExpression visitEvalExpression(EvalExpressionContext ctx) {
-        UnresolvedExpression field = visit(ctx.fieldExpression());
-        UnresolvedExpression evalFunctionCall = visit(ctx.evalFunctionCall());
-        return new EqualTo(field, evalFunctionCall);
+        Field field = (Field) visit(ctx.fieldExpression());
+        UnresolvedExpression evalFunctionCall = visit(ctx.expression());
+        return new Let(field, evalFunctionCall);
     }
 
     /** Comparison expression */
@@ -102,6 +105,17 @@ public class AstExpressionBuilder extends OpenDistroPPLParserBaseVisitor<Unresol
                         .stream()
                         .map(this::visitLiteralValue)
                         .collect(Collectors.toList()));
+    }
+
+    @Override
+    public UnresolvedExpression visitBinaryArithmetic(BinaryArithmeticContext ctx) {
+        return new Function(
+                ctx.binaryOperator().getText(),
+                Arrays.asList(
+                        ctx.leftField != null ? visit(ctx.leftField) : visit(ctx.leftValue),
+                        ctx.rightField != null ? visit(ctx.rightField) : visit(ctx.rightValue)
+                )
+        );
     }
 
     /** Field expression */
@@ -160,7 +174,7 @@ public class AstExpressionBuilder extends OpenDistroPPLParserBaseVisitor<Unresol
     }
 
     @Override
-    public UnresolvedExpression visitWcQualifiedName(OpenDistroPPLParser.WcQualifiedNameContext ctx) {
+    public UnresolvedExpression visitWcQualifiedName(WcQualifiedNameContext ctx) {
         return new QualifiedName(
                 ctx.wildcard()
                         .stream()

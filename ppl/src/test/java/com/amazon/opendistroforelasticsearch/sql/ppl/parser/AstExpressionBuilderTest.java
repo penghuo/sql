@@ -28,12 +28,14 @@ import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.defaultSo
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.defaultStatsArgs;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.doubleLiteral;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.equalTo;
+import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.eval;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.exprList;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.field;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.filter;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.function;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.in;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.intLiteral;
+import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.let;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.not;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.nullLiteral;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.or;
@@ -100,6 +102,42 @@ public class AstExpressionBuilderTest extends AstBuilderTest{
                         equalTo(
                                 field("f"),
                                 function("abs", field("a"))
+                        )
+                ));
+    }
+
+    @Test
+    public void testEvalFunctionExpr() {
+        assertEqual("source=t | eval f=abs(a)",
+                eval(
+                        relation("t"),
+                        let(
+                                field("f"),
+                                function("abs", field("a"))
+                        )
+                ));
+    }
+
+    @Test
+    public void testEvalBinaryOperationExpr() {
+        assertEqual("source=t | eval f=a+b",
+                eval(
+                        relation("t"),
+                        let(
+                                field("f"),
+                                function("+", field("a"), field("b"))
+                        )
+                ));
+    }
+
+    @Test
+    public void testLiteralValueBinaryOperationExpr() {
+        assertEqual("source=t | eval f=3+2",
+                eval(
+                        relation("t"),
+                        let(
+                                field("f"),
+                                function("+", intLiteral(3), intLiteral(2))
                         )
                 ));
     }
@@ -272,9 +310,9 @@ public class AstExpressionBuilderTest extends AstBuilderTest{
     @Test
     public void testEvalFuncCallExpr() {
         assertEqual("source=t | eval f=abs(a)",
-                project(
+                eval(
                         relation("t"),
-                        equalTo(
+                        let(
                                 field("f"),
                                 function("abs", field("a"))
                         )
