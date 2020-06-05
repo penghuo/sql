@@ -18,11 +18,13 @@ package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.aggregation.ExpressionAggregationBuilder;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.request.ElasticsearchRequest;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.response.ElasticsearchResponse;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.script.ExpressionScriptEngine;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
+import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalAggregation;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalFilter;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.storage.TableScanOperator;
@@ -32,6 +34,9 @@ import lombok.ToString;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -116,6 +121,32 @@ public class ElasticsearchIndexScan extends TableScanOperator {
             )
         );
         return this; // Assume everything pushed down and nothing needed for physical filter operator
+    }
+    public PhysicalPlan fold(LogicalAggregation aggregation) {
+
+        TermsAggregationBuilder termsAggregationBuilder = AggregationBuilders.terms("group").script(
+                QueryBuilders.scriptQuery(
+                        new Script(
+                                Script.DEFAULT_SCRIPT_TYPE,
+                                ExpressionScriptEngine.EXPRESSION_LANG_NAME,
+                                serialize(aggregation.getGroupByList().get(0)),
+                                emptyMap() // TODO
+                        )
+                ).script()
+        ).subAggregation(AggregationBuilders.avg("avg").script(new Script(
+                Script.DEFAULT_SCRIPT_TYPE,
+                ExpressionScriptEngine.EXPRESSION_LANG_NAME,
+                serialize((Expression) aggregation.getAggregatorList().get(0).getArguments().get(0)),
+                emptyMap() // TODO
+        )));
+//                .subAggregation(new ExpressionAggregationBuilder("avg",
+//                (Expression) aggregation.getAggregatorList().get(0).getArguments().get(0))
+//        );
+
+
+        request.getSourceBuilder()
+                .aggregation(termsAggregationBuilder);
+        return this;
     }
 
     private String serialize(Expression expression) {

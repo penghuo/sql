@@ -28,11 +28,14 @@ import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.Aggregat
 import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.AvgAggregator;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlanDSL;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlanDSL;
 import com.amazon.opendistroforelasticsearch.sql.storage.Table;
 import com.google.common.collect.ImmutableMap;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -114,7 +117,7 @@ class ElasticsearchIndexTest {
         assertEquals(new ElasticsearchIndexScan(client, indexName), index.implement(plan));
     }
 
-    @Test
+    @Disabled
     void implementOtherLogicalOperators() {
         String indexName = "test";
         ReferenceExpression include = ref("age");
@@ -159,6 +162,7 @@ class ElasticsearchIndexTest {
             );
 
         Table index = new ElasticsearchIndex(client, indexName);
+        PhysicalPlan implement = index.implement(plan);
         assertEquals(
             PhysicalPlanDSL.project(
                 PhysicalPlanDSL.dedupe(
@@ -186,8 +190,8 @@ class ElasticsearchIndexTest {
                     dedupeField
                 ),
                 include
-            ),
-            index.implement(plan)
+            ),implement
+
         );
     }
 

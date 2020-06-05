@@ -26,12 +26,14 @@ import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import org.apache.lucene.index.LeafReaderContext;
 import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.index.fielddata.ScriptDocValues;
+import org.elasticsearch.script.AggregationScript;
 import org.elasticsearch.script.FilterScript;
 import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptEngine;
 import org.elasticsearch.search.lookup.SearchLookup;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
@@ -41,6 +43,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Custom script language to support our expression execution inside Elasticsearch engine.
@@ -48,6 +51,25 @@ import java.util.Set;
 public class ExpressionScriptEngine implements ScriptEngine {
 
     public static final String EXPRESSION_LANG_NAME = "opendistro_expression";
+    private static Map<ScriptContext<?>, Function<Expression,Object>> contexts;
+    static {
+        Map<ScriptContext<?>, Function<Expression,Object>> contexts = new HashMap<ScriptContext<?>, Function<Expression,Object>>();
+        contexts.put(AggregationScript.CONTEXT,
+                (Expression expr) -> new AggregationScript.Factory() {
+                    @Override
+                    public AggregationScript.LeafFactory newFactory(Map<String, Object> params, SearchLookup lookup) {
+                        return new ExpressionAggregationScript(expr, params, lookup);
+                    }
+
+                    @Override
+                    public boolean isResultDeterministic() {
+                        return true;
+                    }
+                });
+        contexts.put(FilterScript.CONTEXT, ExpressionScriptFactory::new);
+
+        ExpressionScriptEngine.contexts = Collections.unmodifiableMap(contexts);
+    }
 
     @Override
     public String getType() {
@@ -61,8 +83,8 @@ public class ExpressionScriptEngine implements ScriptEngine {
                                              Map<String, String> params) {
 
         Expression expression = compile(templateSource);
-        ExpressionScriptFactory factory = new ExpressionScriptFactory(expression);
-        return context.factoryClazz.cast(factory);
+//        ExpressionScriptFactory factory = new ExpressionScriptFactory(expression);
+        return context.factoryClazz.cast(contexts.get(context).apply(expression));
     }
 
     @Override
@@ -114,6 +136,104 @@ public class ExpressionScriptEngine implements ScriptEngine {
             return new ExpressionScript(expression, lookup, ctx, params);
         }
     }
+
+    private static class ExpressionAggregationScript implements AggregationScript.LeafFactory {
+        private final Expression expression;
+        private final Map<String, Object> params;
+        private final SearchLookup lookup;
+
+        public ExpressionAggregationScript(Expression expression, Map<String, Object> params, SearchLookup lookup) {
+            this.expression = expression;
+            this.params = params;
+            this.lookup = lookup;
+        }
+
+        @Override
+        public AggregationScript newInstance(LeafReaderContext ctx) throws IOException {
+            return new ExpressionAggScript(expression, lookup, ctx, params);
+        }
+
+        @Override
+        public boolean needs_score() {
+            return false;
+        }
+    }
+
+    private static class ExpressionAggScript extends AggregationScript {
+        private final Expression expression;
+
+        public ExpressionAggScript(Expression expression,
+                                SearchLookup lookup,
+                                LeafReaderContext context,
+                                Map<String, Object> params) {
+            super(params, lookup, context);
+
+            this.expression = expression;
+        }
+
+        @Override
+        public Object execute() {
+            // Check we ourselves are not being called by unprivileged code.
+            SpecialPermission.check();
+
+            return AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+
+                // 1) getDoc() is not iterable; 2) Doc value is array; 3) Get text field ends up with exception
+                Set<String> fieldNames = extractInputFieldNames();
+                Map<String, Object> values = extractFieldNameAndValues(fieldNames);
+                ExprValue result = evaluateExpression(values);
+                return result.value();
+            });
+        }
+
+        private Set<String> extractInputFieldNames() {
+            Set<String> fieldNames = new HashSet<>();
+            doExtractInputFieldNames(expression, fieldNames);
+            return fieldNames;
+        }
+
+        private void doExtractInputFieldNames(Expression expr, Set<String> fieldNames) {
+            if (expr instanceof FunctionExpression) { // Assume only function input arguments is recursive
+                FunctionExpression func = (FunctionExpression) expr;
+                func.getArguments().forEach(argExpr -> doExtractInputFieldNames(argExpr, fieldNames));
+            } else if (expr instanceof ReferenceExpression) {
+                ReferenceExpression ref = (ReferenceExpression) expr;
+                fieldNames.add(ref.getAttr());
+            }
+        }
+
+        private Map<String, Object> extractFieldNameAndValues(Set<String> fieldNames) {
+            Map<String, Object> values = new HashMap<>();
+            for (String fieldName : fieldNames) {
+                ScriptDocValues<?> value = extractFieldValue(fieldName);
+                if (value != null && !value.isEmpty()) {
+                    values.put(fieldName, value.get(0));
+                }
+            }
+            return values;
+        }
+
+        private ScriptDocValues<?> extractFieldValue(String fieldName) {
+            Map<String, ScriptDocValues<?>> doc = getDoc();
+            String keyword = fieldName + ".keyword";
+
+            ScriptDocValues<?> value = null;
+            if (doc.containsKey(keyword)) {
+                value = doc.get(keyword);
+            } else if (doc.containsKey(fieldName)) {
+                value = doc.get(fieldName);
+            }
+            return value;
+        }
+
+        private ExprValue evaluateExpression(Map<String, Object> values) {
+            ExprValue tupleValue = ExprValueUtils.tupleValue(values);
+            ExprValue result = expression.valueOf(tupleValue.bindingTuples());
+
+            return result;
+        }
+    }
+
 
     private static class ExpressionScript extends FilterScript {
         private final Expression expression;

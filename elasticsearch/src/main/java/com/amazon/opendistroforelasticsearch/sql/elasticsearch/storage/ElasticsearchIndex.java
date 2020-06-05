@@ -140,7 +140,8 @@ public class ElasticsearchIndex implements Table {
 
             @Override
             public PhysicalPlan visitAggregation(LogicalAggregation node, ElasticsearchIndexScan context) {
-                return new AggregationOperator(visitChild(node, context), node.getAggregatorList(), node.getGroupByList());
+//                return new AggregationOperator(visitChild(node, context), node.getAggregatorList(), node.getGroupByList());
+                return context.fold(node);
             }
 
             @Override
