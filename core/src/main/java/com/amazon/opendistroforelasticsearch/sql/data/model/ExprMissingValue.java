@@ -34,7 +34,8 @@ public class ExprMissingValue implements ExprValue {
 
     @Override
     public Object value() {
-        throw new ExpressionEvaluationException("invalid to call value operation on missing value");
+//        throw new ExpressionEvaluationException("invalid to call value operation on missing value");
+        return null;
     }
 
     @Override

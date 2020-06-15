@@ -18,7 +18,6 @@ package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
-import com.amazon.opendistroforelasticsearch.sql.elasticsearch.aggregation.ExpressionAggregationBuilder;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.request.ElasticsearchRequest;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.response.ElasticsearchResponse;
@@ -36,7 +35,6 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.aggregations.metrics.AvgAggregationBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -48,117 +46,109 @@ import java.util.List;
 
 import static java.util.Collections.emptyMap;
 
-/**
- * Elasticsearch index scan operator
- */
+/** Elasticsearch index scan operator */
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @ToString(onlyExplicitlyIncluded = true)
 public class ElasticsearchIndexScan extends TableScanOperator {
 
-    /**
-     * Elasticsearch client.
-     */
-    private final ElasticsearchClient client;
+  /** Elasticsearch client. */
+  private final ElasticsearchClient client;
 
-    /**
-     * Search request.
-     */
-    @EqualsAndHashCode.Include
-    @ToString.Include
-    private final ElasticsearchRequest request;
+  /** Search request. */
+  @EqualsAndHashCode.Include @ToString.Include private final ElasticsearchRequest request;
 
-    /**
-     * Search response for current batch.
-     */
-    private Iterator<SearchHit> hits;
+  /** Search response for current batch. */
+  private Iterator<SearchHit> hits;
 
+  public ElasticsearchIndexScan(ElasticsearchClient client, String indexName) {
+    this.client = client;
+    this.request = new ElasticsearchRequest(indexName);
+  }
 
-    public ElasticsearchIndexScan(ElasticsearchClient client, String indexName) {
-        this.client = client;
-        this.request = new ElasticsearchRequest(indexName);
+  @Override
+  public void open() {
+    super.open();
+
+    // For now pull all results immediately once open
+    List<ElasticsearchResponse> responses = new ArrayList<>();
+    ElasticsearchResponse response = client.search(request);
+    while (!response.isEmpty()) {
+      responses.add(response);
+      response = client.search(request);
     }
+    hits = Iterables.concat(responses.toArray(new ElasticsearchResponse[0])).iterator();
+  }
 
-    @Override
-    public void open() {
-        super.open();
+  @Override
+  public boolean hasNext() {
+    return hits.hasNext();
+  }
 
-        // For now pull all results immediately once open
-        List<ElasticsearchResponse> responses = new ArrayList<>();
-        ElasticsearchResponse response = client.search(request);
-        while (!response.isEmpty()) {
-            responses.add(response);
-            response = client.search(request);
-        }
-        hits = Iterables.concat(responses.toArray(new ElasticsearchResponse[0])).iterator();
-    }
+  @Override
+  public ExprValue next() {
+    return ExprValueUtils.fromObjectValue(hits.next().getSourceAsMap());
+  }
 
-    @Override
-    public boolean hasNext() {
-        return hits.hasNext();
-    }
+  @Override
+  public void close() {
+    super.close();
 
-    @Override
-    public ExprValue next() {
-        return ExprValueUtils.fromObjectValue(hits.next().getSourceAsMap());
-    }
+    client.cleanup(request);
+  }
 
-    @Override
-    public void close() {
-        super.close();
-
-        client.cleanup(request);
-    }
-
-    public PhysicalPlan pushDown(LogicalFilter filter) {
-        request.getSourceBuilder().query(
+  public PhysicalPlan pushDown(LogicalFilter filter) {
+    request
+        .getSourceBuilder()
+        .query(
             QueryBuilders.scriptQuery(
                 new Script(
                     Script.DEFAULT_SCRIPT_TYPE,
                     ExpressionScriptEngine.EXPRESSION_LANG_NAME,
                     serialize(filter.getCondition()),
                     emptyMap() // TODO
-                )
-            )
-        );
-        return this; // Assume everything pushed down and nothing needed for physical filter operator
-    }
-    public PhysicalPlan fold(LogicalAggregation aggregation) {
+                    )));
+    return this; // Assume everything pushed down and nothing needed for physical filter operator
+  }
 
-        TermsAggregationBuilder termsAggregationBuilder = AggregationBuilders.terms("group").script(
-                QueryBuilders.scriptQuery(
+  public PhysicalPlan fold(LogicalAggregation aggregation) {
+
+    TermsAggregationBuilder termsAggregationBuilder =
+        AggregationBuilders.terms("group")
+            .script(
+                new Script(
+                    Script.DEFAULT_SCRIPT_TYPE,
+                    ExpressionScriptEngine.EXPRESSION_LANG_NAME,
+                    serialize(aggregation.getGroupByList().get(0)),
+                    emptyMap() // TODO
+                    ))
+            .subAggregation(
+                AggregationBuilders.avg("avg")
+                    .script(
                         new Script(
-                                Script.DEFAULT_SCRIPT_TYPE,
-                                ExpressionScriptEngine.EXPRESSION_LANG_NAME,
-                                serialize(aggregation.getGroupByList().get(0)),
-                                emptyMap() // TODO
-                        )
-                ).script()
-        ).subAggregation(AggregationBuilders.avg("avg").script(new Script(
-                Script.DEFAULT_SCRIPT_TYPE,
-                ExpressionScriptEngine.EXPRESSION_LANG_NAME,
-                serialize((Expression) aggregation.getAggregatorList().get(0).getArguments().get(0)),
-                emptyMap() // TODO
-        )));
-//                .subAggregation(new ExpressionAggregationBuilder("avg",
-//                (Expression) aggregation.getAggregatorList().get(0).getArguments().get(0))
-//        );
+                            Script.DEFAULT_SCRIPT_TYPE,
+                            ExpressionScriptEngine.EXPRESSION_LANG_NAME,
+                            serialize(
+                                (Expression)
+                                    aggregation.getAggregatorList().get(0).getArguments().get(0)),
+                            emptyMap() // TODO
+                            )));
+    //                .subAggregation(new ExpressionAggregationBuilder("avg",
+    //                (Expression) aggregation.getAggregatorList().get(0).getArguments().get(0))
+    //        );
 
+    request.getSourceBuilder().aggregation(termsAggregationBuilder);
+    return this;
+  }
 
-        request.getSourceBuilder()
-                .aggregation(termsAggregationBuilder);
-        return this;
+  private String serialize(Expression expression) {
+    try {
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+      ObjectOutputStream objectOutput = new ObjectOutputStream(output);
+      objectOutput.writeObject(expression);
+      objectOutput.flush();
+      return Base64.getEncoder().encodeToString(output.toByteArray());
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to serialize expression: " + expression, e);
     }
-
-    private String serialize(Expression expression) {
-        try {
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            ObjectOutputStream objectOutput = new ObjectOutputStream(output);
-            objectOutput.writeObject(expression);
-            objectOutput.flush();
-            return Base64.getEncoder().encodeToString(output.toByteArray());
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to serialize expression: " + expression, e);
-        }
-    }
-
+  }
 }
