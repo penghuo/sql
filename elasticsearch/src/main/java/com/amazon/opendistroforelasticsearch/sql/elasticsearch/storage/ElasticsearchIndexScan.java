@@ -16,6 +16,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 
+import com.amazon.opendistroforelasticsearch.sql.breaker.MemCircuitBreaker;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
@@ -49,6 +50,7 @@ public class ElasticsearchIndexScan extends TableScanOperator {
     this.request = new ElasticsearchRequest(indexName);
   }
 
+  @MemCircuitBreaker
   @Override
   public void open() {
     super.open();

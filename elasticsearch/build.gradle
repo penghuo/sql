@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id "io.freefair.lombok"
     id 'jacoco'
+    id 'io.freefair.aspectj.post-compile-weaving' version "5.1.0"
 }
 
 repositories {
