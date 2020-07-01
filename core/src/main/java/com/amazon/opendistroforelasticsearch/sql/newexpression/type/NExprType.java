@@ -17,12 +17,10 @@
 
 package com.amazon.opendistroforelasticsearch.sql.newexpression.type;
 
-import com.amazon.opendistroforelasticsearch.sql.newexpression.value.NExprValue;
-import com.fasterxml.jackson.databind.JsonNode;
-
+/**
+ * NExprType.
+ */
 public abstract class NExprType {
 
   public abstract boolean compatible(NExprType exprType);
-
-  public abstract NExprValue ofJson(JsonNode value);
 }

@@ -17,20 +17,37 @@
 
 package com.amazon.opendistroforelasticsearch.sql.newexpression.value;
 
+import static com.amazon.opendistroforelasticsearch.sql.newexpression.type.NTupleExprType.TUPLE_TYPE;
+
+import com.amazon.opendistroforelasticsearch.sql.newexpression.NRefExpression;
 import com.amazon.opendistroforelasticsearch.sql.newexpression.bindings.NBindingTuple;
 import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NExprType;
-import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.BindingTuple;
+import java.util.LinkedHashMap;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public interface NExprValue {
+@RequiredArgsConstructor
+public class NTupleExprValue implements NExprValue {
+  @Getter
+  private final LinkedHashMap<String, NExprValue> valueMap;
 
-  NExprType type();
+  @Override
+  public NExprType type() {
+    return TUPLE_TYPE;
+  }
 
-  Object getValue();
+  @Override
+  public Object getValue() {
+    return valueMap;
+  }
 
-  /**
-   * Get the {@link BindingTuple}.
-   */
-  default NBindingTuple bindingTuples() {
-    return null;
+  @Override
+  public NBindingTuple bindingTuples() {
+    return new NBindingTuple() {
+      @Override
+      public NExprValue resolve(NRefExpression name) {
+        return valueMap.get(name.getAttr());
+      }
+    };
   }
 }

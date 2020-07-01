@@ -17,20 +17,14 @@
 
 package com.amazon.opendistroforelasticsearch.sql.newexpression.type;
 
-import com.amazon.opendistroforelasticsearch.sql.newexpression.value.NExprValue;
-import com.amazon.opendistroforelasticsearch.sql.newexpression.value.NIntExprValue;
-import com.fasterxml.jackson.databind.JsonNode;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 public class NIntExprType extends NExprType {
   public static NIntExprType INT_TYPE = new NIntExprType();
 
   @Override
   public boolean compatible(NExprType exprType) {
     return exprType == INT_TYPE;
-  }
-
-  @Override
-  public NExprValue ofJson(JsonNode node) {
-    return new NIntExprValue(node.intValue());
   }
 }

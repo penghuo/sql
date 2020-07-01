@@ -17,8 +17,8 @@
 
 package com.amazon.opendistroforelasticsearch.sql.newexpression.type;
 
-public class NBoolExprType extends NExprType {
-  public static NIntExprType BOOL_TYPE = new NIntExprType();
+public class NTupleExprType extends NExprType {
+  public static NTupleExprType TUPLE_TYPE = new NTupleExprType();
 
   @Override
   public boolean compatible(NExprType exprType) {

@@ -39,6 +39,35 @@ public class NExpressionFactory {
     };
   }
 
+  public static NExpression path(NExpression source, NExpression ref) {
+    return new NExpression() {
+      @Override
+      public NExprValue valueOf(Environment<NExpression, NExprValue> valueEnv) {
+        NExprValue sourceValue = source.valueOf(valueEnv);
+        return ref.valueOf(sourceValue.bindingTuples());
+      }
+
+      @Override
+      public NExprType type() {
+        return ref.type();
+      }
+    };
+  }
+
+  public static NExpression value(NExprValue value) {
+    return new NExpression() {
+      @Override
+      public NExprValue valueOf(Environment<NExpression, NExprValue> valueEnv) {
+        return value;
+      }
+
+      @Override
+      public NExprType type() {
+        return value.type();
+      }
+    };
+  }
+
   public static NExpression ref(String ident, NExprType type) {
     return new NRefExpression(ident, type);
   }

@@ -20,11 +20,12 @@ package com.amazon.opendistroforelasticsearch.sql.newexpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NExprType;
 import com.amazon.opendistroforelasticsearch.sql.newexpression.value.NExprValue;
-import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class NRefExpression implements NExpression {
+  @Getter
   private final String attr;
   private final NExprType exprType;
 
@@ -36,10 +37,5 @@ public class NRefExpression implements NExpression {
   @Override
   public NExprType type() {
     return exprType;
-  }
-
-  public NExprValue valueOf(JsonNode jsonNode) {
-    JsonNode node = jsonNode.at(String.format("/%s", attr));
-    return exprType.ofJson(node);
   }
 }
