@@ -17,7 +17,7 @@ package com.amazon.opendistroforelasticsearch.sql.expression.operator.arthmetic;
 
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.binaryOperator;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
@@ -117,17 +117,17 @@ public class ArithmeticFunction {
       BiFunction<Double, Double, Double> doubleFunc) {
     ImmutableMap.Builder<FunctionSignature, FunctionBuilder> builder = new ImmutableMap.Builder<>();
     builder
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.INTEGER, ExprType.INTEGER)),
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
             binaryOperator(functionName, integerFunc, ExprValueUtils::getIntegerValue,
-                ExprType.INTEGER));
-    builder.put(new FunctionSignature(functionName, Arrays.asList(ExprType.LONG, ExprType.LONG)),
-        binaryOperator(functionName, longFunc, ExprValueUtils::getLongValue, ExprType.LONG));
-    builder.put(new FunctionSignature(functionName, Arrays.asList(ExprType.FLOAT, ExprType.FLOAT)),
-        binaryOperator(functionName, floatFunc, ExprValueUtils::getFloatValue, ExprType.FLOAT));
+                ExprCoreType.INTEGER));
+    builder.put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.LONG, ExprCoreType.LONG)),
+        binaryOperator(functionName, longFunc, ExprValueUtils::getLongValue, ExprCoreType.LONG));
+    builder.put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.FLOAT, ExprCoreType.FLOAT)),
+        binaryOperator(functionName, floatFunc, ExprValueUtils::getFloatValue, ExprCoreType.FLOAT));
     builder
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.DOUBLE, ExprType.DOUBLE)),
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.DOUBLE, ExprCoreType.DOUBLE)),
             binaryOperator(functionName, doubleFunc, ExprValueUtils::getDoubleValue,
-                ExprType.DOUBLE));
+                ExprCoreType.DOUBLE));
     return builder.build();
   }
 }

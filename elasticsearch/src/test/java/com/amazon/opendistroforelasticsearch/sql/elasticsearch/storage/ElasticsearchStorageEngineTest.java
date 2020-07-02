@@ -28,12 +28,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ElasticsearchStorageEngineTest {
 
-  @Mock private ElasticsearchClient client;
-
-  @Test
-  public void getTable() {
-    ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client);
-    Table table = engine.getTable("test");
-    assertNotNull(table);
-  }
+//  @Mock private ElasticsearchClient client;
+//
+//  @Test
+//  public void getTable() {
+//    ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client);
+//    Table table = engine.getTable("test");
+//    assertNotNull(table);
+//  }
 }

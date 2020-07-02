@@ -20,9 +20,10 @@ import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtil
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.LITERAL_NULL;
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.LITERAL_TRUE;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
@@ -190,8 +191,8 @@ public class BinaryPredicateOperator {
     return FunctionResolver.builder()
         .functionName(functionName)
         .functionBundle(new FunctionSignature(functionName,
-            Arrays.asList(ExprType.BOOLEAN, ExprType.BOOLEAN)), binaryPredicate(functionName,
-            andTable, ExprType.BOOLEAN))
+            Arrays.asList(ExprCoreType.BOOLEAN, ExprCoreType.BOOLEAN)), binaryPredicate(functionName,
+            andTable, ExprCoreType.BOOLEAN))
         .build();
   }
 
@@ -200,8 +201,8 @@ public class BinaryPredicateOperator {
     return FunctionResolver.builder()
         .functionName(functionName)
         .functionBundle(new FunctionSignature(functionName,
-            Arrays.asList(ExprType.BOOLEAN, ExprType.BOOLEAN)), binaryPredicate(functionName,
-            orTable, ExprType.BOOLEAN))
+            Arrays.asList(ExprCoreType.BOOLEAN, ExprCoreType.BOOLEAN)), binaryPredicate(functionName,
+            orTable, ExprCoreType.BOOLEAN))
         .build();
   }
 
@@ -210,8 +211,8 @@ public class BinaryPredicateOperator {
     return FunctionResolver.builder()
         .functionName(functionName)
         .functionBundle(new FunctionSignature(functionName,
-            Arrays.asList(ExprType.BOOLEAN, ExprType.BOOLEAN)), binaryPredicate(functionName,
-            xorTable, ExprType.BOOLEAN))
+            Arrays.asList(ExprCoreType.BOOLEAN, ExprCoreType.BOOLEAN)), binaryPredicate(functionName,
+            xorTable, ExprCoreType.BOOLEAN))
         .build();
   }
 
@@ -323,30 +324,30 @@ public class BinaryPredicateOperator {
       BiFunction<Map, Map, Boolean> mapFunc) {
     ImmutableMap.Builder<FunctionSignature, FunctionBuilder> builder = new ImmutableMap.Builder<>();
     return builder
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.INTEGER, ExprType.INTEGER)),
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
             equalPredicate(functionName, table, integerFunc, ExprValueUtils::getIntegerValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.LONG, ExprType.LONG)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.LONG, ExprCoreType.LONG)),
             equalPredicate(functionName, table, longFunc, ExprValueUtils::getLongValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.FLOAT, ExprType.FLOAT)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.FLOAT, ExprCoreType.FLOAT)),
             equalPredicate(functionName, table, floatFunc, ExprValueUtils::getFloatValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.DOUBLE, ExprType.DOUBLE)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.DOUBLE, ExprCoreType.DOUBLE)),
             equalPredicate(functionName, table, doubleFunc, ExprValueUtils::getDoubleValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.STRING, ExprType.STRING)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.STRING, ExprCoreType.STRING)),
             equalPredicate(functionName, table, stringFunc, ExprValueUtils::getStringValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.BOOLEAN, ExprType.BOOLEAN)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.BOOLEAN, ExprCoreType.BOOLEAN)),
             equalPredicate(functionName, table, booleanFunc, ExprValueUtils::getBooleanValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.ARRAY, ExprType.ARRAY)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.ARRAY, ExprCoreType.ARRAY)),
             equalPredicate(functionName, table, listFunc, ExprValueUtils::getCollectionValue,
-                defaultValue, ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.STRUCT, ExprType.STRUCT)),
+                defaultValue, ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.STRUCT, ExprCoreType.STRUCT)),
             equalPredicate(functionName, table, mapFunc, ExprValueUtils::getTupleValue,
-                defaultValue, ExprType.BOOLEAN))
+                defaultValue, ExprCoreType.BOOLEAN))
         .build();
   }
 
@@ -359,27 +360,27 @@ public class BinaryPredicateOperator {
       BiFunction<String, String, Boolean> stringFunc) {
     ImmutableMap.Builder<FunctionSignature, FunctionBuilder> builder = new ImmutableMap.Builder<>();
     return builder
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.INTEGER, ExprType.INTEGER)),
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
             compareValue(functionName, integerFunc, ExprValueUtils::getIntegerValue,
-                ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.LONG, ExprType.LONG)),
+                ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.LONG, ExprCoreType.LONG)),
             compareValue(functionName, longFunc, ExprValueUtils::getLongValue,
-            ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.FLOAT, ExprType.FLOAT)),
+            ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.FLOAT, ExprCoreType.FLOAT)),
             compareValue(functionName, floatFunc, ExprValueUtils::getFloatValue,
-            ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.DOUBLE, ExprType.DOUBLE)),
+            ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.DOUBLE, ExprCoreType.DOUBLE)),
             compareValue(functionName, doubleFunc, ExprValueUtils::getDoubleValue,
-                ExprType.BOOLEAN))
-        .put(new FunctionSignature(functionName, Arrays.asList(ExprType.STRING, ExprType.STRING)),
+                ExprCoreType.BOOLEAN))
+        .put(new FunctionSignature(functionName, Arrays.asList(ExprCoreType.STRING, ExprCoreType.STRING)),
             compareValue(functionName, stringFunc, ExprValueUtils::getStringValue,
-                ExprType.BOOLEAN))
+                ExprCoreType.BOOLEAN))
         .build();
   }
 
   private static FunctionBuilder binaryPredicate(FunctionName functionName,
                                                  Table<ExprValue, ExprValue, ExprValue> table,
-                                                 ExprType returnType) {
+                                                 ExprCoreType returnType) {
     return arguments -> new FunctionExpression(functionName, arguments) {
       @Override
       public ExprValue valueOf(Environment<Expression, ExprValue> env) {
@@ -393,7 +394,7 @@ public class BinaryPredicateOperator {
       }
 
       @Override
-      public ExprType type(Environment<Expression, ExprType> env) {
+      public ExprType type() {
         return returnType;
       }
 
@@ -431,7 +432,7 @@ public class BinaryPredicateOperator {
       }
 
       @Override
-      public ExprType type(Environment<Expression, ExprType> env) {
+      public ExprType type() {
         return returnType;
       }
 
@@ -453,7 +454,7 @@ public class BinaryPredicateOperator {
   private static <T, R> FunctionBuilder compareValue(FunctionName functionName,
                                                      BiFunction<T, T, R> function,
                                                      Function<ExprValue, T> observer,
-                                                     ExprType returnType) {
+                                                     ExprCoreType returnType) {
     return arguments -> new FunctionExpression(functionName, arguments) {
       @Override
       public ExprValue valueOf(Environment<Expression, ExprValue> env) {
@@ -464,7 +465,7 @@ public class BinaryPredicateOperator {
       }
 
       @Override
-      public ExprType type(Environment<Expression, ExprType> env) {
+      public ExprType type() {
         return returnType;
       }
 

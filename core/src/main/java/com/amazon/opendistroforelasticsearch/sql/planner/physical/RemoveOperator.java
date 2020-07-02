@@ -15,7 +15,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.planner.physical;
 
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.STRUCT;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.STRUCT;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprTupleValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 /**
@@ -39,12 +39,27 @@ import lombok.ToString;
  */
 @ToString
 @EqualsAndHashCode
-@RequiredArgsConstructor
 public class RemoveOperator extends PhysicalPlan {
   @Getter
   private final PhysicalPlan input;
   @Getter
   private final Set<ReferenceExpression> removeList;
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  private final Set<String> nameRemoveList;
+
+  /**
+   * Todo.
+   * @param input
+   * @param removeList
+   */
+  public RemoveOperator(PhysicalPlan input,
+                        Set<ReferenceExpression> removeList) {
+    this.input = input;
+    this.removeList = removeList;
+    this.nameRemoveList =
+        removeList.stream().map(ReferenceExpression::getAttr).collect(Collectors.toSet());
+  }
 
   @Override
   public <R, C> R accept(PhysicalPlanNodeVisitor<R, C> visitor, C context) {
@@ -68,7 +83,7 @@ public class RemoveOperator extends PhysicalPlan {
       ImmutableMap.Builder<String, ExprValue> mapBuilder = new Builder<>();
       Map<String, ExprValue> tupleValue = ExprValueUtils.getTupleValue(inputValue);
       for (Entry<String, ExprValue> valueEntry : tupleValue.entrySet()) {
-        if (!removeList.contains(DSL.ref(valueEntry.getKey()))) {
+        if (!nameRemoveList.contains(valueEntry.getKey())) {
           mapBuilder.put(valueEntry);
         }
       }

@@ -19,6 +19,8 @@ package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.value.ExprJsonTupleValue;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.value.JsonExprValueFactory;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.request.ElasticsearchRequest;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.response.ElasticsearchResponse;
 import com.amazon.opendistroforelasticsearch.sql.storage.TableScanOperator;
@@ -70,7 +72,7 @@ public class ElasticsearchIndexScan extends TableScanOperator {
 
   @Override
   public ExprValue next() {
-    return ExprValueUtils.fromObjectValue(hits.next().getSourceAsMap());
+    return new ExprJsonTupleValue(hits.next().getSourceAsString(), new JsonExprValueFactory());
   }
 
   @Override

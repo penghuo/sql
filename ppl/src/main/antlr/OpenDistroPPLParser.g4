@@ -211,7 +211,7 @@ dateAndTimeFunctionBase
     ;
 
 textFunctionBase
-    :
+    : LENGTH
     ;
 
 /** operators */

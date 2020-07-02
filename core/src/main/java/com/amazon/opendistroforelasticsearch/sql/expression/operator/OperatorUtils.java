@@ -15,9 +15,9 @@
 
 package com.amazon.opendistroforelasticsearch.sql.expression.operator;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -92,7 +91,7 @@ public class OperatorUtils {
           }
 
           @Override
-          public ExprType type(Environment<Expression, ExprType> env) {
+          public ExprType type() {
             return returnType;
           }
 
@@ -138,7 +137,7 @@ public class OperatorUtils {
           }
 
           @Override
-          public ExprType type(Environment<Expression, ExprType> env) {
+          public ExprType type() {
             return returnType;
           }
 

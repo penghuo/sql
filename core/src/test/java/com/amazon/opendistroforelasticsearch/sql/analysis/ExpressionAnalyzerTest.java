@@ -18,11 +18,14 @@ package com.amazon.opendistroforelasticsearch.sql.analysis;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.field;
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.LITERAL_TRUE;
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.integerValue;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.BOOLEAN;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.INTEGER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL;
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.UnresolvedExpression;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.exception.SemanticCheckException;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
@@ -34,7 +37,7 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void equal() {
     assertAnalyzeEqual(
-        dsl.equal(typeEnv, DSL.ref("integer_value"), DSL.literal(integerValue(1))),
+        dsl.equal(DSL.ref("integer_value", INTEGER), DSL.literal(integerValue(1))),
         AstDSL.equalTo(AstDSL.unresolvedAttr("integer_value"), AstDSL.intLiteral(1))
     );
   }
@@ -42,7 +45,7 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void and() {
     assertAnalyzeEqual(
-        dsl.and(typeEnv, DSL.ref("boolean_value"), DSL.literal(LITERAL_TRUE)),
+        dsl.and(DSL.ref("boolean_value", BOOLEAN), DSL.literal(LITERAL_TRUE)),
         AstDSL.and(AstDSL.unresolvedAttr("boolean_value"), AstDSL.booleanLiteral(true))
     );
   }
@@ -50,7 +53,7 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void or() {
     assertAnalyzeEqual(
-        dsl.or(typeEnv, DSL.ref("boolean_value"), DSL.literal(LITERAL_TRUE)),
+        dsl.or(DSL.ref("boolean_value", BOOLEAN), DSL.literal(LITERAL_TRUE)),
         AstDSL.or(AstDSL.unresolvedAttr("boolean_value"), AstDSL.booleanLiteral(true))
     );
   }
@@ -58,7 +61,7 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void xor() {
     assertAnalyzeEqual(
-        dsl.xor(typeEnv, DSL.ref("boolean_value"), DSL.literal(LITERAL_TRUE)),
+        dsl.xor(DSL.ref("boolean_value", BOOLEAN), DSL.literal(LITERAL_TRUE)),
         AstDSL.xor(AstDSL.unresolvedAttr("boolean_value"), AstDSL.booleanLiteral(true))
     );
   }
@@ -66,7 +69,7 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void not() {
     assertAnalyzeEqual(
-        dsl.not(typeEnv, DSL.ref("boolean_value")),
+        dsl.not(DSL.ref("boolean_value", BOOLEAN)),
         AstDSL.not(AstDSL.unresolvedAttr("boolean_value"))
     );
   }

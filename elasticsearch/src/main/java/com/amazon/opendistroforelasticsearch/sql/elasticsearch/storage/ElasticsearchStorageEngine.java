@@ -17,16 +17,30 @@
 package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.expression.CustomizeFunction;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
 import com.amazon.opendistroforelasticsearch.sql.storage.Table;
 import lombok.RequiredArgsConstructor;
 
 /** Elasticsearch storage engine implementation. */
-@RequiredArgsConstructor
 public class ElasticsearchStorageEngine implements StorageEngine {
 
   /** Elasticsearch client connection. */
   private final ElasticsearchClient client;
+
+  private final BuiltinFunctionRepository repository;
+
+  /**
+   * ElasticsearchStorageEngine.
+   */
+  public ElasticsearchStorageEngine(
+      ElasticsearchClient client,
+      BuiltinFunctionRepository repository) {
+    this.client = client;
+    this.repository = repository;
+    CustomizeFunction.register(this.repository);
+  }
 
   @Override
   public Table getTable(String name) {

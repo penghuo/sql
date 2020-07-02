@@ -15,7 +15,8 @@
 
 package com.amazon.opendistroforelasticsearch.sql.storage;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.Map;
 public interface Table {
 
   /**
-   * Get the {@link ExprType} for each field in the table.
+   * Get the {@link ExprCoreType} for each field in the table.
    */
   Map<String, ExprType> getFieldTypes();
 

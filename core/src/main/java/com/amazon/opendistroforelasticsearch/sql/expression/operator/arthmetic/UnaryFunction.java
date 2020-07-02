@@ -17,7 +17,7 @@ package com.amazon.opendistroforelasticsearch.sql.expression.operator.arthmetic;
 
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.unaryOperator;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
@@ -61,18 +61,18 @@ public class UnaryFunction {
       Function<Double, Double> doubleFunc) {
     ImmutableMap.Builder<FunctionSignature, FunctionBuilder> builder = new ImmutableMap.Builder<>();
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprType.INTEGER)),
+        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER)),
         unaryOperator(
-            functionName, integerFunc, ExprValueUtils::getIntegerValue, ExprType.INTEGER));
+            functionName, integerFunc, ExprValueUtils::getIntegerValue, ExprCoreType.INTEGER));
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprType.LONG)),
-        unaryOperator(functionName, longFunc, ExprValueUtils::getLongValue, ExprType.LONG));
+        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.LONG)),
+        unaryOperator(functionName, longFunc, ExprValueUtils::getLongValue, ExprCoreType.LONG));
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprType.FLOAT)),
-        unaryOperator(functionName, floatFunc, ExprValueUtils::getFloatValue, ExprType.FLOAT));
+        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.FLOAT)),
+        unaryOperator(functionName, floatFunc, ExprValueUtils::getFloatValue, ExprCoreType.FLOAT));
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprType.DOUBLE)),
-        unaryOperator(functionName, doubleFunc, ExprValueUtils::getDoubleValue, ExprType.DOUBLE));
+        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.DOUBLE)),
+        unaryOperator(functionName, doubleFunc, ExprValueUtils::getDoubleValue, ExprCoreType.DOUBLE));
     return builder.build();
   }
 }

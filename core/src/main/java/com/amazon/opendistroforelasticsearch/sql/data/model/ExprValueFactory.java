@@ -15,20 +15,10 @@
  *
  */
 
-package com.amazon.opendistroforelasticsearch.sql.newexpression.value;
+package com.amazon.opendistroforelasticsearch.sql.data.model;
 
-import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NExprType;
-import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NIntExprType;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 
-@RequiredArgsConstructor
-public class NIntExprValue implements NExprValue {
-  @Getter
-  private final Integer value;
-
-  @Override
-  public NExprType type() {
-    return NIntExprType.INT_TYPE;
-  }
+public interface ExprValueFactory<S> {
+  ExprValue create(S source, ExprType type);
 }

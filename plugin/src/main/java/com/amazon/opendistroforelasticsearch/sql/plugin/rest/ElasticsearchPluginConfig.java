@@ -26,6 +26,7 @@ import com.amazon.opendistroforelasticsearch.sql.elasticsearch.monitor.Elasticse
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.monitor.ElasticsearchResourceMonitor;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.ElasticsearchStorageEngine;
 import com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.monitor.ResourceMonitor;
 import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
 import org.elasticsearch.client.node.NodeClient;
@@ -50,6 +51,9 @@ public class ElasticsearchPluginConfig {
   @Autowired
   private Settings settings;
 
+  @Autowired
+  private BuiltinFunctionRepository repository;
+
   @Bean
   public ElasticsearchClient client() {
     return new ElasticsearchNodeClient(clusterService, nodeClient);
@@ -57,7 +61,7 @@ public class ElasticsearchPluginConfig {
 
   @Bean
   public StorageEngine storageEngine() {
-    return new ElasticsearchStorageEngine(client());
+    return new ElasticsearchStorageEngine(client(), repository);
   }
 
   @Bean

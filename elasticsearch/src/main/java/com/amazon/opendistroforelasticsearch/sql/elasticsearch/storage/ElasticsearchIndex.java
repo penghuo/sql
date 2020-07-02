@@ -16,8 +16,12 @@
 
 package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprKeywordType;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprMultiFieldTextType;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprTextType;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.mapping.IndexMapping;
 import com.amazon.opendistroforelasticsearch.sql.planner.DefaultImplementor;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
@@ -39,15 +43,15 @@ public class ElasticsearchIndex implements Table {
    */
   private static final Map<String, ExprType> ES_TYPE_TO_EXPR_TYPE_MAPPING =
       ImmutableMap.<String, ExprType>builder()
-          .put("text", ExprType.STRING)
-          .put("keyword", ExprType.STRING)
-          .put("integer", ExprType.INTEGER)
-          .put("long", ExprType.LONG)
-          .put("float", ExprType.FLOAT)
-          .put("double", ExprType.DOUBLE)
-          .put("boolean", ExprType.BOOLEAN)
-          .put("nested", ExprType.ARRAY)
-          .put("object", ExprType.STRUCT)
+          .put("text", ExprTextType.TEXT)
+          .put("keyword", ExprKeywordType.KEYWORD)
+          .put("integer", ExprCoreType.INTEGER)
+          .put("long", ExprCoreType.LONG)
+          .put("float", ExprCoreType.FLOAT)
+          .put("double", ExprCoreType.DOUBLE)
+          .put("boolean", ExprCoreType.BOOLEAN)
+          .put("nested", ExprCoreType.ARRAY)
+          .put("object", ExprCoreType.STRUCT)
           .build();
 
   /** Elasticsearch client connection. */
@@ -67,6 +71,14 @@ public class ElasticsearchIndex implements Table {
     Map<String, IndexMapping> indexMappings = client.getIndexMappings(indexName);
     for (IndexMapping indexMapping : indexMappings.values()) {
       fieldTypes.putAll(indexMapping.getAllFieldTypes(this::transformESTypeToExprType));
+    }
+
+    //todo postprocessing the multiple type field
+    for (String ident : fieldTypes.keySet()) {
+      if (ident.endsWith(".keyword")) {
+        fieldTypes.put(ident.substring(0, ident.lastIndexOf(".keyword")),
+            ExprMultiFieldTextType.MULTI_FIELD);
+      }
     }
     return fieldTypes;
   }
@@ -91,6 +103,6 @@ public class ElasticsearchIndex implements Table {
   }
 
   private ExprType transformESTypeToExprType(String esType) {
-    return ES_TYPE_TO_EXPR_TYPE_MAPPING.getOrDefault(esType, ExprType.UNKNOWN);
+    return ES_TYPE_TO_EXPR_TYPE_MAPPING.getOrDefault(esType, ExprCoreType.UNKNOWN);
   }
 }

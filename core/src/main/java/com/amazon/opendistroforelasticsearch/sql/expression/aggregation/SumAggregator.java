@@ -23,12 +23,17 @@ import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtil
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.getLongValue;
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.integerValue;
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.longValue;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.DOUBLE;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.FLOAT;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.INTEGER;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.LONG;
 import static com.amazon.opendistroforelasticsearch.sql.utils.ExpressionUtils.format;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprNullValue;
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.SumAggregator.SumState;
@@ -74,12 +79,12 @@ public class SumAggregator extends Aggregator<SumState> {
    */
   protected class SumState implements AggregationState {
 
-    private final ExprType type;
+    private final ExprCoreType type;
     private ExprValue sumResult;
     private boolean isNullResult = false;
 
     public SumState(ExprType type) {
-      this.type = type;
+      this.type = (ExprCoreType) type;
       sumResult = ExprValueUtils.integerValue(0);
     }
 
@@ -87,6 +92,7 @@ public class SumAggregator extends Aggregator<SumState> {
      * Add value to current sumResult.
      */
     public void add(ExprValue value) {
+
       switch (type) {
         case INTEGER:
           sumResult = integerValue(getIntegerValue(sumResult) + getIntegerValue(value));

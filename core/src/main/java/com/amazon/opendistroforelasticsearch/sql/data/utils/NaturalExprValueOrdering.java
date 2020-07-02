@@ -29,6 +29,7 @@ import static com.amazon.opendistroforelasticsearch.sql.expression.operator.Oper
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.STRING_COMPARATOR;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import com.google.common.collect.Ordering;
 
@@ -54,7 +55,8 @@ public class NaturalExprValueOrdering extends ExprValueOrdering {
               "compare expected value have same type, but with [%s, %s]",
               left.type(), right.type()));
     }
-    switch (left.type()) {
+    // todo, how to compare the value of same type.
+    switch ((ExprCoreType)left.type()) {
       case DOUBLE:
         return Double.compare(getDoubleValue(left), getDoubleValue(right));
       case FLOAT:

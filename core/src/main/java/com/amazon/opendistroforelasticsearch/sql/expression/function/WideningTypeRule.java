@@ -15,20 +15,10 @@
 
 package com.amazon.opendistroforelasticsearch.sql.expression.function;
 
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.ARRAY;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.BOOLEAN;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.DOUBLE;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.FLOAT;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.INTEGER;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.LONG;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.STRING;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.STRUCT;
-import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprType.UNKNOWN;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.UNKNOWN;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 /**
@@ -48,21 +38,6 @@ public class WideningTypeRule {
   public static final int IMPOSSIBLE_WIDENING = Integer.MAX_VALUE;
   public static final int TYPE_EQUAL = 0;
 
-  private static final Map<ExprType, ExprType> typeToWidenParent;
-
-  static {
-    ImmutableMap.Builder<ExprType, ExprType> builder = new ImmutableMap.Builder<>();
-    builder.put(INTEGER, LONG);
-    builder.put(LONG, FLOAT);
-    builder.put(FLOAT, DOUBLE);
-    builder.put(DOUBLE, UNKNOWN);
-    builder.put(STRING, UNKNOWN);
-    builder.put(BOOLEAN, UNKNOWN);
-    builder.put(ARRAY, UNKNOWN);
-    builder.put(STRUCT, UNKNOWN);
-    typeToWidenParent = builder.build();
-  }
-
   /**
    * The widening distance is calculated from the leaf to root.
    * e.g. distance(INTEGER, FLOAT) = 2, but distance(FLOAT, INTEGER) =
@@ -81,7 +56,9 @@ public class WideningTypeRule {
     } else if (type1 == type2) {
       return distance;
     } else {
-      return distance(typeToWidenParent.get(type1), type2, distance + 1);
+      return type1.getParent().stream()
+          .map(parentOfType1 -> distance(parentOfType1, type2, distance + 1))
+          .reduce(Math::min).orElseGet(() -> IMPOSSIBLE_WIDENING);
     }
   }
 

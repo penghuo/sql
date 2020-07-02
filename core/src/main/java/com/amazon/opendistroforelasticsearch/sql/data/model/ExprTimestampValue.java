@@ -15,13 +15,20 @@
  *
  */
 
-package com.amazon.opendistroforelasticsearch.sql.newexpression.type;
+package com.amazon.opendistroforelasticsearch.sql.data.model;
 
-public class NTupleExprType extends NExprType {
-  public static NTupleExprType TUPLE_TYPE = new NTupleExprType();
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
+
+public class ExprTimestampValue implements ExprValue {
 
   @Override
-  public boolean compatible(NExprType exprType) {
-    return false;
+  public Object value() {
+    return null;
+  }
+
+  @Override
+  public ExprType type() {
+    return ExprCoreType.TIMESTAMP;
   }
 }

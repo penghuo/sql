@@ -24,6 +24,7 @@ import com.amazon.opendistroforelasticsearch.sql.elasticsearch.executor.protecto
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.executor.protector.NoopExecutionProtector;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.ElasticsearchStorageEngine;
 import com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.cluster.service.ClusterService;
@@ -40,6 +41,9 @@ public class ElasticsearchSQLPluginConfig {
   @Autowired
   private NodeClient nodeClient;
 
+  @Autowired
+  private BuiltinFunctionRepository repository;
+
   @Bean
   public ElasticsearchClient client() {
     return new ElasticsearchNodeClient(clusterService, nodeClient);
@@ -47,7 +51,7 @@ public class ElasticsearchSQLPluginConfig {
 
   @Bean
   public StorageEngine storageEngine() {
-    return new ElasticsearchStorageEngine(client());
+    return new ElasticsearchStorageEngine(client(), repository);
   }
 
   @Bean

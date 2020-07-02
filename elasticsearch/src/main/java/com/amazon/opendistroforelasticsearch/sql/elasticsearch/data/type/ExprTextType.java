@@ -15,13 +15,15 @@
  *
  */
 
-package com.amazon.opendistroforelasticsearch.sql.newexpression.type;
+package com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type;
 
-public class NBoolExprType extends NExprType {
-  public static NIntExprType BOOL_TYPE = new NIntExprType();
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
+
+public class ExprTextType implements ExprType {
+  public static final ExprType TEXT = new ExprTextType();
 
   @Override
-  public boolean compatible(NExprType exprType) {
-    return false;
+  public String name() {
+    return "Elasticsearch Text";
   }
 }

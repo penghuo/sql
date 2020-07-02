@@ -15,21 +15,26 @@
  *
  */
 
-package com.amazon.opendistroforelasticsearch.sql.newexpression;
+package com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type;
 
-import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
-import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NExprType;
-import com.amazon.opendistroforelasticsearch.sql.newexpression.value.NExprValue;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.STRING;
 
-public interface NExpression {
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
+import java.util.Arrays;
+import java.util.List;
+import lombok.ToString;
 
-  /**
-   * Evaluate the value of expression in the value environment.
-   */
-  NExprValue valueOf(Environment<NExpression, NExprValue> valueEnv);
+@ToString
+public class ExprKeywordType implements ExprType {
+  public static final ExprType KEYWORD = new ExprKeywordType();
 
-  /**
-   * Evaluate the type of expression in the type environment.
-   */
-  NExprType type();
+  @Override
+  public List<ExprType> getParent() {
+    return Arrays.asList(STRING);
+  }
+
+  @Override
+  public String name() {
+    return "Elasticsearch Keyword";
+  }
 }

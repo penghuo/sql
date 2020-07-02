@@ -15,7 +15,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.expression.aggregation;
 
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionBuilder;
@@ -51,8 +51,8 @@ public class AggregatorFunction {
     return new FunctionResolver(
         functionName,
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.DOUBLE)),
-                arguments -> new AvgAggregator(arguments, ExprType.DOUBLE))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.DOUBLE)),
+                arguments -> new AvgAggregator(arguments, ExprCoreType.DOUBLE))
             .build()
     );
   }
@@ -62,22 +62,22 @@ public class AggregatorFunction {
     return new FunctionResolver(
         functionName,
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.INTEGER)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.LONG)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.FLOAT)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.DOUBLE)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.STRING)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.STRUCT)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.ARRAY)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.BOOLEAN)),
-                arguments -> new CountAggregator(arguments, ExprType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.INTEGER)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.LONG)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.FLOAT)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.DOUBLE)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.STRING)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.STRUCT)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.ARRAY)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.BOOLEAN)),
+                arguments -> new CountAggregator(arguments, ExprCoreType.INTEGER))
             .build()
     );
   }
@@ -87,14 +87,14 @@ public class AggregatorFunction {
     return new FunctionResolver(
         functionName,
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.INTEGER)),
-                arguments -> new SumAggregator(arguments, ExprType.INTEGER))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.LONG)),
-                arguments -> new SumAggregator(arguments, ExprType.LONG))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.FLOAT)),
-                arguments -> new SumAggregator(arguments, ExprType.FLOAT))
-            .put(new FunctionSignature(functionName, Collections.singletonList(ExprType.DOUBLE)),
-                arguments -> new SumAggregator(arguments, ExprType.DOUBLE))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.INTEGER)),
+                arguments -> new SumAggregator(arguments, ExprCoreType.INTEGER))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.LONG)),
+                arguments -> new SumAggregator(arguments, ExprCoreType.LONG))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.FLOAT)),
+                arguments -> new SumAggregator(arguments, ExprCoreType.FLOAT))
+            .put(new FunctionSignature(functionName, Collections.singletonList(ExprCoreType.DOUBLE)),
+                arguments -> new SumAggregator(arguments, ExprCoreType.DOUBLE))
             .build()
     );
   }

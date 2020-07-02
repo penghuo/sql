@@ -15,22 +15,43 @@
  *
  */
 
-package com.amazon.opendistroforelasticsearch.sql.newexpression.value;
+package com.amazon.opendistroforelasticsearch.sql.data.type;
 
-import com.amazon.opendistroforelasticsearch.sql.newexpression.bindings.NBindingTuple;
-import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NExprType;
-import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.BindingTuple;
+import java.util.Arrays;
+import java.util.List;
 
-public interface NExprValue {
+/**
+ * Expression Core Type.
+ */
+public enum ExprCoreType implements ExprType {
+  UNKNOWN,
 
-  NExprType type();
+  SHORT,
+  INTEGER(SHORT),
+  LONG(INTEGER),
+  FLOAT(LONG),
+  DOUBLE(FLOAT),
 
-  Object getValue();
+  TIMESTAMP,
+
+  BOOLEAN,
+  STRING,
+  STRUCT,
+  ARRAY;
 
   /**
-   * Get the {@link BindingTuple}.
+   * Parent of current base type.
    */
-  default NBindingTuple bindingTuples() {
-    return null;
+  private ExprCoreType parent;
+
+  ExprCoreType(ExprCoreType... compatibleTypes) {
+    for (ExprCoreType subType : compatibleTypes) {
+      subType.parent = this;
+    }
+  }
+
+  @Override
+  public List<ExprType> getParent() {
+    return Arrays.asList(parent == null ? UNKNOWN : parent);
   }
 }

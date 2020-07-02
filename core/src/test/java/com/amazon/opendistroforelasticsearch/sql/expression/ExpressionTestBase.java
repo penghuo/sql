@@ -31,14 +31,13 @@ import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtil
 import static com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils.tupleValue;
 
 import com.amazon.opendistroforelasticsearch.sql.config.TestConfig;
-import com.amazon.opendistroforelasticsearch.sql.data.model.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.config.ExpressionConfig;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiFunction;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -105,15 +104,15 @@ public class ExpressionTestBase {
       BuiltinFunctionName builtinFunctionName) {
     switch (builtinFunctionName) {
       case ADD:
-        return (env, expressions) -> dsl.add(env, expressions.get(0), expressions.get(1));
+        return (env, expressions) -> dsl.add(expressions.get(0), expressions.get(1));
       case SUBTRACT:
-        return (env, expressions) -> dsl.subtract(env, expressions.get(0), expressions.get(1));
+        return (env, expressions) -> dsl.subtract(expressions.get(0), expressions.get(1));
       case MULTIPLY:
-        return (env, expressions) -> dsl.multiply(env, expressions.get(0), expressions.get(1));
+        return (env, expressions) -> dsl.multiply(expressions.get(0), expressions.get(1));
       case DIVIDE:
-        return (env, expressions) -> dsl.divide(env, expressions.get(0), expressions.get(1));
+        return (env, expressions) -> dsl.divide(expressions.get(0), expressions.get(1));
       case MODULES:
-        return (env, expressions) -> dsl.module(env, expressions.get(0), expressions.get(1));
+        return (env, expressions) -> dsl.module(expressions.get(0), expressions.get(1));
       default:
         throw new RuntimeException();
     }

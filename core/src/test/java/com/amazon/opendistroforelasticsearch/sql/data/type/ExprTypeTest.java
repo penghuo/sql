@@ -15,21 +15,19 @@
  *
  */
 
-package com.amazon.opendistroforelasticsearch.sql.newexpression.value;
+package com.amazon.opendistroforelasticsearch.sql.data.type;
 
-import static com.amazon.opendistroforelasticsearch.sql.newexpression.type.NBoolExprType.BOOL_TYPE;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.DOUBLE;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.FLOAT;
+import static org.junit.jupiter.api.Assertions.*;
 
-import com.amazon.opendistroforelasticsearch.sql.newexpression.type.NExprType;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Test;
 
-@RequiredArgsConstructor
-public class NBoolExprValue implements NExprValue {
-  @Getter
-  private final Boolean value;
-
-  @Override
-  public NExprType type() {
-    return BOOL_TYPE;
+class ExprTypeTest {
+  @Test
+  public void testCoreTypeIsCompatible() {
+    assertTrue(DOUBLE.isCompatible(FLOAT));
+    assertFalse(FLOAT.isCompatible(DOUBLE));
   }
+
 }
