@@ -17,6 +17,7 @@
 package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprTimestampType;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprKeywordType;
@@ -52,6 +53,7 @@ public class ElasticsearchIndex implements Table {
           .put("boolean", ExprCoreType.BOOLEAN)
           .put("nested", ExprCoreType.ARRAY)
           .put("object", ExprCoreType.STRUCT)
+          .put("date", ExprTimestampType.TIMESTAMP)
           .build();
 
   /** Elasticsearch client connection. */

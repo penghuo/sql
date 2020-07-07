@@ -19,14 +19,16 @@ package com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.value;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueFactory;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.BindingTuple;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -57,8 +59,11 @@ public class ExprJsonTupleValue implements ExprValue {
    */
   @Override
   public Object value() {
-    return MAPPER.convertValue(jsonNode, new TypeReference<Map<String, Object>>() {
-    });
+    Map<String, ExprValue> map = new LinkedHashMap<>();
+    jsonNode.fieldNames().forEachRemaining(
+        name -> map.put(name, jsonNodeToExprValue(jsonNode.findValue(name)))
+    );
+    return map;
   }
 
   @Override
@@ -69,6 +74,25 @@ public class ExprJsonTupleValue implements ExprValue {
         JsonNode node = jsonNode.at(String.format("/%s", ((ReferenceExpression) expr).getAttr()));
         return exprValueFactory.create(node, expr.getType());
       }
+
+      @Override
+      public Set<String> bindingNames() {
+        return null;
+      }
     };
+  }
+
+  static ExprValue jsonNodeToExprValue(JsonNode jsonNode) {
+    switch (jsonNode.getNodeType()) {
+      case BOOLEAN:
+        return ExprValueUtils.fromObjectValue(jsonNode.booleanValue());
+      case NUMBER:
+        return ExprValueUtils.fromObjectValue(jsonNode.numberValue());
+      case STRING:
+        return ExprValueUtils.fromObjectValue(jsonNode.textValue());
+      default:
+        throw new IllegalStateException(
+            "jsonNodeToExprValue unsupported type " + jsonNode.getNodeType());
+    }
   }
 }

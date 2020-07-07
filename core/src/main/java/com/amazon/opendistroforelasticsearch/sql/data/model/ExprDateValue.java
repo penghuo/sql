@@ -19,24 +19,26 @@ package com.amazon.opendistroforelasticsearch.sql.data.model;
 
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprTimestampType.TIMESTAMP;
 
-import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprDateType;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import java.util.Date;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
 @EqualsAndHashCode
 @RequiredArgsConstructor
-public class ExprTimestampValue implements ExprValue {
+public class ExprDateValue implements ExprValue {
   private final Date date;
 
   @Override
   public Object value() {
-    return date;
+    return DateFormatUtils.format(date, "yyyy-MM-dd");
   }
 
   @Override
   public ExprType type() {
-    return TIMESTAMP;
+    return ExprDateType.DATE;
   }
 }

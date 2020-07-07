@@ -24,6 +24,7 @@ import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.I
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.LONG;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.STRING;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.STRUCT;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprTimestampType.TIMESTAMP;
 
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 
@@ -44,6 +45,8 @@ public abstract class CoreExprValueFactory<S> implements ExprValueFactory<S> {
       return createTuple(source, type);
     } else if (type.equals(ARRAY)) {
       return createCollection(source, type);
+    } else if (type.equals(TIMESTAMP)) {
+      return createTimestamp(source, type);
     } else {
       return createCustomize(source, type);
     }
@@ -58,6 +61,8 @@ public abstract class CoreExprValueFactory<S> implements ExprValueFactory<S> {
   public abstract ExprValue createDouble(S source, ExprType type);
 
   public abstract ExprValue createString(S source, ExprType type);
+
+  public abstract ExprValue createTimestamp(S source, ExprType type);
 
   public abstract ExprValue createTuple(S source, ExprType type);
 

@@ -17,39 +17,11 @@
 
 package com.amazon.opendistroforelasticsearch.sql.data.type;
 
-import java.util.Arrays;
-import java.util.List;
-
-/**
- * Expression Core Type.
- */
-public enum ExprCoreType implements ExprType {
-  UNKNOWN,
-
-  SHORT,
-  INTEGER(SHORT),
-  LONG(INTEGER),
-  FLOAT(LONG),
-  DOUBLE(FLOAT),
-
-  BOOLEAN,
-  STRING,
-  STRUCT,
-  ARRAY;
-
-  /**
-   * Parent of current base type.
-   */
-  private ExprCoreType parent;
-
-  ExprCoreType(ExprCoreType... compatibleTypes) {
-    for (ExprCoreType subType : compatibleTypes) {
-      subType.parent = this;
-    }
-  }
+public class ExprDateType implements ExprType {
+  public static final ExprType DATE = new ExprDateType();
 
   @Override
-  public List<ExprType> getParent() {
-    return Arrays.asList(parent == null ? UNKNOWN : parent);
+  public String name() {
+    return "DATE";
   }
 }

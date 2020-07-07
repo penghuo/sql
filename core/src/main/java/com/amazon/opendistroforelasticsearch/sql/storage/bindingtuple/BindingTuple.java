@@ -21,6 +21,8 @@ import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationE
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * BindingTuple represents the a relationship between bindingName and ExprValue.
@@ -31,6 +33,11 @@ public abstract class BindingTuple implements Environment<Expression, ExprValue>
     @Override
     public ExprValue resolve(ReferenceExpression ref) {
       return ExprMissingValue.of();
+    }
+
+    @Override
+    public Set<String> bindingNames() {
+      return new HashSet<>();
     }
   };
 
@@ -50,4 +57,6 @@ public abstract class BindingTuple implements Environment<Expression, ExprValue>
    * Resolve the {@link ReferenceExpression} in BindingTuple context.
    */
   public abstract ExprValue resolve(ReferenceExpression ref);
+
+  public abstract Set<String> bindingNames();
 }

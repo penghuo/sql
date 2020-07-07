@@ -27,14 +27,21 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprFloatValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprIntegerValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprLongValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprStringValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprTimestampValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
-import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprKeywordType;
-import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprMultiFieldTextType;
-import com.amazon.opendistroforelasticsearch.sql.elasticsearch.data.type.ExprTextType;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.time.DateUtils;
 
 public class JsonExprValueFactory extends CoreExprValueFactory<JsonNode> {
+  private static final String FORMAT_DOT_DATE_AND_TIME = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+  private static final String FORMAT_DOT_KIBANA_SAMPLE_DATA_LOGS_EXCEPTION = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+  private static final String FORMAT_DOT_KIBANA_SAMPLE_DATA_FLIGHTS_EXCEPTION = "yyyy-MM-dd'T'HH:mm:ss";
+  private static final String FORMAT_DOT_KIBANA_SAMPLE_DATA_FLIGHTS_EXCEPTION_NO_TIME = "yyyy-MM-dd'T'";
+  private static final String FORMAT_DOT_KIBANA_SAMPLE_DATA_ECOMMERCE_EXCEPTION = "yyyy-MM-dd'T'HH:mm:ssXXX";
+  private static final String FORMAT_DATE = "yyyy-MM-dd";
+
 
   @Override
   public ExprValue createInteger(JsonNode source, ExprType type) {
@@ -59,6 +66,18 @@ public class JsonExprValueFactory extends CoreExprValueFactory<JsonNode> {
   @Override
   public ExprValue createString(JsonNode source, ExprType type) {
     return new ExprStringValue(source.textValue());
+  }
+
+  @SneakyThrows
+  @Override
+  public ExprValue createTimestamp(JsonNode source, ExprType type) {
+    return new ExprTimestampValue(
+        DateUtils.parseDate(source.textValue(), FORMAT_DATE,
+            FORMAT_DOT_KIBANA_SAMPLE_DATA_LOGS_EXCEPTION,
+            FORMAT_DOT_KIBANA_SAMPLE_DATA_FLIGHTS_EXCEPTION,
+            FORMAT_DOT_KIBANA_SAMPLE_DATA_FLIGHTS_EXCEPTION_NO_TIME,
+            FORMAT_DOT_KIBANA_SAMPLE_DATA_ECOMMERCE_EXCEPTION,
+            FORMAT_DOT_DATE_AND_TIME));
   }
 
   @Override

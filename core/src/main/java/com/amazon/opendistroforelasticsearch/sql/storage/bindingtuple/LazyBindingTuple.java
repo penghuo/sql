@@ -17,6 +17,8 @@ package com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple;
 
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 
@@ -30,5 +32,10 @@ public class LazyBindingTuple extends BindingTuple {
   @Override
   public ExprValue resolve(ReferenceExpression ref) {
     return lazyBinding.apply(ref.getAttr());
+  }
+
+  @Override
+  public Set<String> bindingNames() {
+    return new HashSet<>();
   }
 }

@@ -207,7 +207,7 @@ mathematicalFunctionBase
     ;
 
 dateAndTimeFunctionBase
-    :
+    : DATE
     ;
 
 textFunctionBase
