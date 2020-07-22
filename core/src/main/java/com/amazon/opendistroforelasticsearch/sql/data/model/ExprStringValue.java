@@ -38,4 +38,9 @@ public class ExprStringValue implements ExprValue {
   public String toString() {
     return String.format("\"%s\"", value);
   }
+
+  @Override
+  public String string() {
+    return value;
+  }
 }

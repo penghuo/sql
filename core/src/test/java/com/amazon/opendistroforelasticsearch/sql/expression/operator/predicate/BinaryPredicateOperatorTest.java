@@ -37,12 +37,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
+import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ExpressionTestBase;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -718,5 +725,29 @@ class BinaryPredicateOperatorTest extends ExpressionTestBase {
         DSL.ref(STRING_TYPE_NULL_VALUE_FILED, STRING));
     assertEquals(BOOLEAN, like.type());
     assertEquals(LITERAL_MISSING, like.valueOf(valueEnv()));
+  }
+
+  @Test
+  public void serializationTest() {
+    Expression expression = dsl.equal(DSL.literal("v1"), DSL.literal("v2"));
+    try {
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
+      ObjectOutputStream objectOutput = new ObjectOutputStream(output);
+      objectOutput.writeObject(expression);
+      objectOutput.flush();
+      String source = Base64.getEncoder().encodeToString(output.toByteArray());
+
+
+      ByteArrayInputStream input = new ByteArrayInputStream(Base64.getDecoder().decode(source));
+      ObjectInputStream objectInput = new ObjectInputStream(input);
+
+      Expression e = (Expression) objectInput.readObject();
+      ExprValue exprValue = e.valueOf(valueEnv());
+
+      assertEquals(LITERAL_FALSE, exprValue);
+
+    } catch (IOException | ClassNotFoundException e) {
+      throw new IllegalStateException("Failed to serialize expression: " + expression, e);
+    }
   }
 }

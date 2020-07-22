@@ -29,12 +29,8 @@ public class ExprBooleanValue implements ExprValue {
     this.value = value;
   }
 
-  public static ExprValue ofTrue() {
-    return TRUE;
-  }
-
-  public static ExprValue ofFalse() {
-    return FALSE;
+  public static ExprValue of(Boolean value) {
+    return value ? TRUE : FALSE;
   }
 
   @Override

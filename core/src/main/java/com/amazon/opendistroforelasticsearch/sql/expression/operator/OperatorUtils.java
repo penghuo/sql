@@ -24,6 +24,11 @@ import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionBuilder;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionName;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionResolver;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -32,6 +37,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
 public class OperatorUtils {
@@ -310,5 +316,116 @@ public class OperatorUtils {
 
   public interface TriFunction<T, U, V, R> {
     R apply(T t, U u, V v);
+  }
+
+
+  /**
+   * Define overloaded function with implementation.
+   * @param functionName function name.
+   * @param functions a list of function implementation.
+   * @return FunctionResolver.
+   */
+  public FunctionResolver define(FunctionName functionName,
+                                  Function<FunctionName, Pair<FunctionSignature,
+                                      FunctionBuilder>>... functions) {
+
+    FunctionResolver.FunctionResolverBuilder builder = FunctionResolver.builder();
+    builder.functionName(functionName);
+    for (Function<FunctionName, Pair<FunctionSignature, FunctionBuilder>> func : functions) {
+      Pair<FunctionSignature, FunctionBuilder> functionBuilder = func.apply(functionName);
+      builder.functionBundle(functionBuilder.getKey(), functionBuilder.getValue());
+    }
+    return builder.build();
+  }
+
+  /**
+   * Unary Function Implementation.
+   * @param function {@link ExprValue} based unary function.
+   * @param returnType return type.
+   * @param argsType argument type.
+   *
+   * @return Unary Function Implementation.
+   */
+  private Function<FunctionName, Pair<FunctionSignature, FunctionBuilder>> unaryImpl(
+      Function<ExprValue, ExprValue> function,
+      ExprType returnType,
+      ExprType argsType) {
+
+    return functionName -> {
+      FunctionSignature functionSignature =
+          new FunctionSignature(functionName, Collections.singletonList(argsType));
+      FunctionBuilder functionBuilder =
+          arguments -> new FunctionExpression(functionName, arguments) {
+            @Override
+            public ExprValue valueOf(Environment<Expression, ExprValue> valueEnv) {
+              ExprValue value = arguments.get(0).valueOf(valueEnv);
+              if (value.isMissing()) {
+                return ExprValueUtils.missingValue();
+              } else if (value.isNull()) {
+                return ExprValueUtils.nullValue();
+              } else {
+                return function.apply(value);
+              }
+            }
+
+            @Override
+            public ExprType type() {
+              return returnType;
+            }
+
+            @Override
+            public String toString() {
+              return String.format("%s(%s)", functionName,
+                  arguments.stream()
+                      .map(Object::toString)
+                      .collect(Collectors.joining(", ")));
+            }
+          };
+      return Pair.of(functionSignature, functionBuilder);
+    };
+  }
+
+  public Function<FunctionName, Pair<FunctionSignature, FunctionBuilder>> binaryImpl(
+      SerializableBiFunction<ExprValue, ExprValue, ExprValue> function,
+      ExprType returnType,
+      ExprType arg1Type, ExprType arg2Type) {
+
+    return functionName -> {
+      FunctionSignature functionSignature =
+          new FunctionSignature(functionName, Arrays.asList(arg1Type, arg2Type));
+      FunctionBuilder functionBuilder =
+          arguments -> new FunctionExpression(functionName, arguments) {
+            @Override
+            public ExprValue valueOf(Environment<Expression, ExprValue> valueEnv) {
+              ExprValue arg1 = arguments.get(0).valueOf(valueEnv);
+              ExprValue arg2 = arguments.get(1).valueOf(valueEnv);
+              if (arg1.isMissing() || arg2.isMissing()) {
+                return ExprValueUtils.missingValue();
+              } else if (arg1.isNull() || arg2.isNull()) {
+                return ExprValueUtils.nullValue();
+              } else {
+                return function.apply(arg1, arg2);
+              }
+            }
+
+            @Override
+            public ExprType type() {
+              return returnType;
+            }
+
+            @Override
+            public String toString() {
+              return String.format("%s(%s)", functionName,
+                  arguments.stream()
+                      .map(Object::toString)
+                      .collect(Collectors.joining(", ")));
+            }
+          };
+      return Pair.of(functionSignature, functionBuilder);
+    };
+  }
+
+  public interface SerializableBiFunction<T, U, R> extends Serializable {
+    R apply(T t, U u);
   }
 }

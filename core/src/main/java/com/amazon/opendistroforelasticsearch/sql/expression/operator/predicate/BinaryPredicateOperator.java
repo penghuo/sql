@@ -30,6 +30,8 @@ import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.S
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.binaryOperator;
 import static com.amazon.opendistroforelasticsearch.sql.utils.OperatorUtils.matches;
 
+
+import com.amazon.opendistroforelasticsearch.sql.data.function.ExprValueExtension;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
@@ -43,6 +45,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionBui
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionResolver;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature;
+import com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Table;
@@ -227,23 +230,30 @@ public class BinaryPredicateOperator {
   }
 
   private static FunctionResolver equal() {
-    return new FunctionResolver(
-        BuiltinFunctionName.EQUAL.getName(),
-        predicate(
-            BuiltinFunctionName.EQUAL.getName(),
-            equalTable,
-            LITERAL_FALSE,
-            Integer::equals,
-            Long::equals,
-            Float::equals,
-            Double::equals,
-            String::equals,
-            Boolean::equals,
-            List::equals,
-            Map::equals
-        )
+    return OperatorUtils.define(BuiltinFunctionName.EQUAL.getName(),
+        OperatorUtils.binaryImpl(
+            ExprValueExtension::stringEqual, BOOLEAN, STRING, STRING)
     );
   }
+
+//  private static FunctionResolver equal() {
+//    return new FunctionResolver(
+//        BuiltinFunctionName.EQUAL.getName(),
+//        predicate(
+//            BuiltinFunctionName.EQUAL.getName(),
+//            equalTable,
+//            LITERAL_FALSE,
+//            Integer::equals,
+//            Long::equals,
+//            Float::equals,
+//            Double::equals,
+//            String::equals,
+//            Boolean::equals,
+//            List::equals,
+//            Map::equals
+//        )
+//    );
+//  }
 
   private static FunctionResolver notEqual() {
     return new FunctionResolver(
