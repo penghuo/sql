@@ -40,6 +40,8 @@ import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ExpressionTestBase;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -737,6 +739,7 @@ class BinaryPredicateOperatorTest extends ExpressionTestBase {
       objectOutput.flush();
       String source = Base64.getEncoder().encodeToString(output.toByteArray());
 
+      System.out.println(source);
 
       ByteArrayInputStream input = new ByteArrayInputStream(Base64.getDecoder().decode(source));
       ObjectInputStream objectInput = new ObjectInputStream(input);
@@ -749,5 +752,15 @@ class BinaryPredicateOperatorTest extends ExpressionTestBase {
     } catch (IOException | ClassNotFoundException e) {
       throw new IllegalStateException("Failed to serialize expression: " + expression, e);
     }
+  }
+
+  @Test
+  public void jsonTest() throws JsonProcessingException {
+    Expression expression = dsl.equal(DSL.literal("v1"), DSL.literal("v2"));
+    ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    String source = OBJECT_MAPPER.writeValueAsString(expression);
+
+    System.out.println(source);
   }
 }
