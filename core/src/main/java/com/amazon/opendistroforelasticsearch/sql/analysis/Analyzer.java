@@ -15,8 +15,6 @@
 
 package com.amazon.opendistroforelasticsearch.sql.analysis;
 
-import static com.amazon.opendistroforelasticsearch.sql.expression.DSL.named;
-
 import com.amazon.opendistroforelasticsearch.sql.analysis.symbol.Namespace;
 import com.amazon.opendistroforelasticsearch.sql.analysis.symbol.Symbol;
 import com.amazon.opendistroforelasticsearch.sql.ast.AbstractNodeVisitor;
@@ -42,7 +40,6 @@ import com.amazon.opendistroforelasticsearch.sql.exception.SemanticCheckExceptio
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.LiteralExpression;
-import com.amazon.opendistroforelasticsearch.sql.expression.NamedExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.Aggregator;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalAggregation;
@@ -65,7 +62,6 @@ import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -73,10 +69,24 @@ import org.apache.commons.lang3.tuple.Pair;
  * Analyze the {@link UnresolvedPlan} in the {@link AnalysisContext} to construct the {@link
  * LogicalPlan}.
  */
-@RequiredArgsConstructor
 public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> {
+
   private final ExpressionAnalyzer expressionAnalyzer;
+
+  private final SelectExpressionAnalyzer selectExpressionAnalyzer;
+
   private final StorageEngine storageEngine;
+
+  /**
+   * Constructor.
+   */
+  public Analyzer(
+      ExpressionAnalyzer expressionAnalyzer,
+      StorageEngine storageEngine) {
+    this.expressionAnalyzer = expressionAnalyzer;
+    this.storageEngine = storageEngine;
+    this.selectExpressionAnalyzer = new SelectExpressionAnalyzer(expressionAnalyzer);
+  }
 
   public LogicalPlan analyze(UnresolvedPlan unresolved, AnalysisContext context) {
     return unresolved.accept(this, context);
@@ -169,10 +179,8 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
       }
     }
 
-    List<NamedExpression> expressions = node.getProjectList().stream()
-        .map(expr -> named(expressionAnalyzer.analyze(expr, context)))
-        .collect(Collectors.toList());
-    return new LogicalProject(child, expressions);
+    return new LogicalProject(child,
+        selectExpressionAnalyzer.analyze(node.getProjectList(), context));
   }
 
   /**

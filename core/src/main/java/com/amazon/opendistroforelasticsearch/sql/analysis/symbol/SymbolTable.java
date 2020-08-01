@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Symbol table for symbol definition and resolution.
@@ -76,6 +77,21 @@ public class SymbolTable {
       return table.subMap(prefix.getName(), prefix.getName() + Character.MAX_VALUE);
     }
     return emptyMap();
+  }
+
+  /**
+   * Look up all top level symbols in the namespace.
+   * this function is mainly used by SELECT * use case to get the top level fields
+   * Todo. currently, the top level fields is the field which doesn't include "." in the name.
+   *
+   * @param namespace     a namespace
+   * @return              all symbols in the namespace map
+   */
+  public Map<String, ExprType> lookupAllFields(Namespace namespace) {
+    return tableByNamespace.getOrDefault(namespace, emptyNavigableMap())
+        .entrySet().stream()
+        .filter(entry -> !entry.getKey().contains("\\.") && null != entry.getValue())
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   /**

@@ -61,9 +61,9 @@ public class ProjectOperator extends PhysicalPlan {
     for (NamedExpression expr : projectList) {
       ExprValue exprValue = expr.valueOf(inputValue.bindingTuples());
       // missing value is ignored.
-      if (!exprValue.isMissing()) {
+//      if (!exprValue.isMissing()) {
         mapBuilder.put(expr.getName(), exprValue);
-      }
+//      }
     }
     return ExprTupleValue.fromExprValueMap(mapBuilder.build());
   }
