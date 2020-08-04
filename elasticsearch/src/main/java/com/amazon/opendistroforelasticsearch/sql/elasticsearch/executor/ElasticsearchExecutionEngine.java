@@ -22,8 +22,10 @@ import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.Elasticsea
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.executor.protector.ExecutionProtector;
 import com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.ProjectOperator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 
 /** Elasticsearch execution engine implementation. */
@@ -40,15 +42,26 @@ public class ElasticsearchExecutionEngine implements ExecutionEngine {
     client.schedule(
         () -> {
           try {
-            List<ExprValue> result = new ArrayList<>();
-            plan.open();
+            if (plan instanceof ProjectOperator) {
+              List<ExprValue> result = new ArrayList<>();
 
-            while (plan.hasNext()) {
-              result.add(plan.next());
+              ProjectOperator project = (ProjectOperator) plan;
+              Schema schema =
+                  new Schema(project.getProjectList().stream()
+                      .map(expr -> new Schema.Column(expr.getName(),
+                          expr.getName(), expr.type())).collect(Collectors.toList()));
+
+              plan.open();
+
+              while (plan.hasNext()) {
+                result.add(plan.next());
+              }
+
+              QueryResponse response = new QueryResponse(schema, result);
+              listener.onResponse(response);
+            } else {
+              throw new IllegalStateException("[BUG] The first operator must be project");
             }
-
-            QueryResponse response = new QueryResponse(result);
-            listener.onResponse(response);
           } catch (Exception e) {
             listener.onFailure(e);
           } finally {
