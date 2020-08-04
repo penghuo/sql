@@ -58,7 +58,7 @@ public class QueryResult implements Iterable<Object[]> {
   public Map<String, String> columnNameTypes() {
     Map<String, String> colNameTypes = new LinkedHashMap<>();
     schema.getColumns().forEach(column -> colNameTypes.put(column.getName(),
-        column.getExprType().typeName()));
+        column.getExprType().typeName().toLowerCase()));
     return colNameTypes;
   }
 

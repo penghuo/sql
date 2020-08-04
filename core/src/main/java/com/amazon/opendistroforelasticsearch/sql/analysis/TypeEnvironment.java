@@ -94,4 +94,14 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
     define(new Symbol(Namespace.FIELD_NAME, ref.getAttr()), ref.type());
   }
 
+  public void remove(Symbol symbol) {
+    symbolTable.remove(symbol);
+  }
+
+  /**
+   * Remove ref.
+   */
+  public void remove(ReferenceExpression ref) {
+    remove(new Symbol(Namespace.FIELD_NAME, ref.getAttr()));
+  }
 }

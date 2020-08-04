@@ -19,6 +19,8 @@ import static com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine
 
 import com.amazon.opendistroforelasticsearch.sql.analysis.AnalysisContext;
 import com.amazon.opendistroforelasticsearch.sql.analysis.Analyzer;
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.AllFields;
+import com.amazon.opendistroforelasticsearch.sql.ast.tree.Project;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.UnresolvedPlan;
 import com.amazon.opendistroforelasticsearch.sql.common.response.ResponseListener;
 import com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine;
@@ -30,6 +32,7 @@ import com.amazon.opendistroforelasticsearch.sql.ppl.domain.PPLQueryRequest;
 import com.amazon.opendistroforelasticsearch.sql.ppl.parser.AstBuilder;
 import com.amazon.opendistroforelasticsearch.sql.ppl.parser.AstExpressionBuilder;
 import com.amazon.opendistroforelasticsearch.sql.storage.StorageEngine;
+import com.google.common.collect.ImmutableList;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
@@ -55,7 +58,7 @@ public class PPLService {
       UnresolvedPlan ast = cst.accept(new AstBuilder(new AstExpressionBuilder()));
 
       // 2.Analyze abstract syntax to generate logical plan
-      LogicalPlan logicalPlan = analyzer.analyze(ast, new AnalysisContext());
+      LogicalPlan logicalPlan = analyzer.analyze(addSelectAll(ast), new AnalysisContext());
 
       // 3.Generate optimal physical plan from logical plan
       PhysicalPlan physicalPlan = new Planner(storageEngine).plan(logicalPlan);
@@ -64,6 +67,17 @@ public class PPLService {
       executionEngine.execute(physicalPlan, listener);
     } catch (Exception e) {
       listener.onFailure(e);
+    }
+  }
+
+  /**
+   * Attach Select All to PPL commands if required.
+   */
+  private UnresolvedPlan addSelectAll(UnresolvedPlan plan) {
+    if ((plan instanceof Project) && !((Project) plan).isExcluded()) {
+      return plan;
+    } else {
+      return new Project(ImmutableList.of(AllFields.of())).attach(plan);
     }
   }
 }

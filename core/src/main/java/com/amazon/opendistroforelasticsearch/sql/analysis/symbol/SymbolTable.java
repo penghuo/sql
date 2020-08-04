@@ -51,6 +51,16 @@ public class SymbolTable {
   }
 
   /**
+   * Remove a symbol.
+   */
+  public void remove(Symbol symbol) {
+    tableByNamespace.computeIfAbsent(
+        symbol.getNamespace(),
+        ns -> new TreeMap<>()
+    ).remove(symbol.getName());
+  }
+
+  /**
    * Look up symbol in the namespace map.
    *
    * @param symbol symbol to look up
@@ -90,7 +100,7 @@ public class SymbolTable {
   public Map<String, ExprType> lookupAllFields(Namespace namespace) {
     return tableByNamespace.getOrDefault(namespace, emptyNavigableMap())
         .entrySet().stream()
-        .filter(entry -> !entry.getKey().contains("\\.") && null != entry.getValue())
+        .filter(entry -> !entry.getKey().contains(".") && null != entry.getValue())
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 

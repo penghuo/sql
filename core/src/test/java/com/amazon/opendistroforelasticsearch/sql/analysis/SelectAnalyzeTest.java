@@ -17,6 +17,9 @@
 
 package com.amazon.opendistroforelasticsearch.sql.analysis;
 
+import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.argument;
+import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.booleanLiteral;
+import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.field;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.DOUBLE;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.INTEGER;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.STRING;
@@ -28,6 +31,7 @@ import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.config.ExpressionConfig;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlanDSL;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -60,12 +64,98 @@ public class SelectAnalyzeTest extends AnalyzerTestBase {
             DSL.named("string_value", DSL.ref("string_value", STRING)),
             DSL.named("integer_value", DSL.ref("integer_value", INTEGER)),
             DSL.named("double_value", DSL.ref("double_value", DOUBLE))
-            ),
+        ),
         AstDSL.projectWithArg(
             AstDSL.relation("schema"),
             AstDSL.defaultFieldsArgs(),
             AstDSL.field("integer_value"), // Field not wrapped by Alias
             AstDSL.alias("double_value", AstDSL.field("double_value")),
             AllFields.of()));
+  }
+
+  @Test
+  public void select_and_project_all() {
+    assertAnalyzeEqual(
+        LogicalPlanDSL.project(
+            LogicalPlanDSL.project(
+                LogicalPlanDSL.relation("schema"),
+                DSL.named("integer_value", DSL.ref("integer_value", INTEGER)),
+                DSL.named("double_value", DSL.ref("double_value", DOUBLE))
+            ),
+            DSL.named("integer_value", DSL.ref("integer_value", INTEGER)),
+            DSL.named("double_value", DSL.ref("double_value", DOUBLE))
+        ),
+        AstDSL.projectWithArg(
+            AstDSL.projectWithArg(
+                AstDSL.relation("schema"),
+                AstDSL.defaultFieldsArgs(),
+                AstDSL.field("integer_value"),
+                AstDSL.field("double_value")),
+            AstDSL.defaultFieldsArgs(),
+            AllFields.of()
+        ));
+  }
+
+  @Test
+  public void remove_and_project_all() {
+    assertAnalyzeEqual(
+        LogicalPlanDSL.project(
+            LogicalPlanDSL.remove(
+                LogicalPlanDSL.relation("schema"),
+                DSL.ref("integer_value", INTEGER),
+                DSL.ref("double_value", DOUBLE)
+            ),
+            DSL.named("string_value", DSL.ref("string_value", STRING))
+        ),
+        AstDSL.projectWithArg(
+            AstDSL.projectWithArg(
+                AstDSL.relation("schema"),
+                AstDSL.exprList(argument("exclude", booleanLiteral(true))),
+                AstDSL.field("integer_value"),
+                AstDSL.field("double_value")),
+            AstDSL.defaultFieldsArgs(),
+            AllFields.of()
+        ));
+  }
+
+  @Test
+  public void stats_and_project_all() {
+    assertAnalyzeEqual(
+        LogicalPlanDSL.project(
+            LogicalPlanDSL.aggregation(
+                LogicalPlanDSL.relation("schema"),
+                ImmutableList.of(dsl.avg(DSL.ref("integer_value", INTEGER))),
+                ImmutableList.of(DSL.ref("string_value", STRING))),
+            DSL.named("string_value", DSL.ref("string_value", STRING)),
+            DSL.named("avg(integer_value)", DSL.ref("avg(integer_value)", DOUBLE))
+        ),
+        AstDSL.projectWithArg(
+            AstDSL.agg(
+                AstDSL.relation("schema"),
+                AstDSL.exprList(AstDSL.aggregate("avg", field("integer_value"))),
+                null,
+                ImmutableList.of(field("string_value")),
+                AstDSL.defaultStatsArgs()), AstDSL.defaultFieldsArgs(),
+            AllFields.of()));
+  }
+
+  @Test
+  public void rename_and_project_all() {
+    assertAnalyzeEqual(
+        LogicalPlanDSL.project(
+            LogicalPlanDSL.rename(
+                LogicalPlanDSL.relation("schema"),
+                ImmutableMap.of(DSL.ref("integer_value", INTEGER), DSL.ref("ivalue", INTEGER))),
+            DSL.named("ivalue", DSL.ref("ivalue", INTEGER)),
+            DSL.named("string_value", DSL.ref("string_value", STRING)),
+            DSL.named("double_value", DSL.ref("double_value", DOUBLE))
+        ),
+        AstDSL.projectWithArg(
+            AstDSL.rename(
+                AstDSL.relation("schema"),
+                AstDSL.map(AstDSL.field("integer_value"), AstDSL.field("ivalue"))),
+            AstDSL.defaultFieldsArgs(),
+            AllFields.of()
+        ));
   }
 }

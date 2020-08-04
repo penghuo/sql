@@ -60,10 +60,7 @@ public class ProjectOperator extends PhysicalPlan {
     ImmutableMap.Builder<String, ExprValue> mapBuilder = new Builder<>();
     for (NamedExpression expr : projectList) {
       ExprValue exprValue = expr.valueOf(inputValue.bindingTuples());
-      // missing value is ignored.
-//      if (!exprValue.isMissing()) {
-        mapBuilder.put(expr.getName(), exprValue);
-//      }
+      mapBuilder.put(expr.getName(), exprValue);
     }
     return ExprTupleValue.fromExprValueMap(mapBuilder.build());
   }
