@@ -44,10 +44,10 @@ import org.elasticsearch.action.search.ClearScrollRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.node.NodeClient;
 import org.elasticsearch.cluster.ClusterState;
-import org.elasticsearch.cluster.metadata.IndexAbstraction;
-import org.elasticsearch.cluster.metadata.IndexMetadata;
-import org.elasticsearch.cluster.metadata.MappingMetadata;
-import org.elasticsearch.cluster.metadata.Metadata;
+import org.elasticsearch.cluster.metadata.AliasOrIndex;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.xcontent.DeprecationHandler;
@@ -181,6 +181,7 @@ class ElasticsearchNodeClientTest {
   @Test
   void schedule() {
     ThreadPool threadPool = mock(ThreadPool.class);
+    when(threadPool.preserveContext(any())).then(invocation -> invocation.getArgument(0));
     when(nodeClient.threadPool()).thenReturn(threadPool);
 
     doAnswer(
@@ -238,38 +239,38 @@ class ElasticsearchNodeClientTest {
   public ClusterService mockClusterService(String indexName) {
     ClusterService mockService = mock(ClusterService.class);
     ClusterState mockState = mock(ClusterState.class);
-    Metadata mockMetaData = mock(Metadata.class);
+    MetaData mockMetaData = mock(MetaData.class);
 
     when(mockService.state()).thenReturn(mockState);
-    when(mockState.metadata()).thenReturn(mockMetaData);
-    when(mockMetaData.getIndicesLookup())
-            .thenReturn(ImmutableSortedMap.of(indexName, mock(IndexAbstraction.class)));
+    when(mockState.metaData()).thenReturn(mockMetaData);
+    when(mockMetaData.getAliasAndIndexLookup())
+        .thenReturn(ImmutableSortedMap.of(indexName, mock(AliasOrIndex.class)));
     return mockService;
   }
 
   public ClusterService mockClusterService(String indexName, String mappings) {
     ClusterService mockService = mock(ClusterService.class);
     ClusterState mockState = mock(ClusterState.class);
-    Metadata mockMetaData = mock(Metadata.class);
+    MetaData mockMetaData = mock(MetaData.class);
 
     when(mockService.state()).thenReturn(mockState);
-    when(mockState.metadata()).thenReturn(mockMetaData);
+    when(mockState.metaData()).thenReturn(mockMetaData);
     try {
-      ImmutableOpenMap.Builder<String, ImmutableOpenMap<String, MappingMetadata>> builder =
+      ImmutableOpenMap.Builder<String, ImmutableOpenMap<String, MappingMetaData>> builder =
           ImmutableOpenMap.builder();
-      ImmutableOpenMap<String, MappingMetadata> metadata;
+      ImmutableOpenMap<String, MappingMetaData> metadata;
       if (mappings.isEmpty()) {
         metadata = ImmutableOpenMap.of();
       } else {
-        metadata = IndexMetadata.fromXContent(createParser(mappings)).getMappings();
+        metadata = IndexMetaData.fromXContent(createParser(mappings)).getMappings();
       }
       builder.put(indexName, metadata);
       when(mockMetaData.findMappings(any(), any(), any())).thenReturn(builder.build());
 
       // IndexNameExpressionResolver use this method to check if index exists. If not,
       // IndexNotFoundException is thrown.
-      when(mockMetaData.getIndicesLookup())
-              .thenReturn(ImmutableSortedMap.of(indexName, mock(IndexAbstraction.class)));
+      when(mockMetaData.getAliasAndIndexLookup())
+          .thenReturn(ImmutableSortedMap.of(indexName, mock(AliasOrIndex.class)));
     } catch (IOException e) {
       throw new IllegalStateException("Failed to mock cluster service", e);
     }
@@ -279,14 +280,14 @@ class ElasticsearchNodeClientTest {
   public ClusterService mockClusterService(String indexName, Throwable t) {
     ClusterService mockService = mock(ClusterService.class);
     ClusterState mockState = mock(ClusterState.class);
-    Metadata mockMetaData = mock(Metadata.class);
+    MetaData mockMetaData = mock(MetaData.class);
 
     when(mockService.state()).thenReturn(mockState);
-    when(mockState.metadata()).thenReturn(mockMetaData);
+    when(mockState.metaData()).thenReturn(mockMetaData);
     try {
       when(mockMetaData.findMappings(any(), any(), any())).thenThrow(t);
-      when(mockMetaData.getIndicesLookup())
-              .thenReturn(ImmutableSortedMap.of(indexName, mock(IndexAbstraction.class)));
+      when(mockMetaData.getAliasAndIndexLookup())
+          .thenReturn(ImmutableSortedMap.of(indexName, mock(AliasOrIndex.class)));
     } catch (IOException e) {
       throw new IllegalStateException("Failed to mock cluster service", e);
     }
