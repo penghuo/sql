@@ -121,9 +121,7 @@ public class ElasticsearchExprValueFactory {
     } else if (type.equals(ES_TEXT_KEYWORD)) {
       return new ElasticsearchExprTextKeywordValue(value.asText());
     } else {
-      throw new IllegalStateException(
-          String.format(
-              "Unsupported type: %s for field: %s, value: %s.", type.typeName(), field, value));
+      return nullValue();
     }
   }
 
@@ -166,9 +164,7 @@ public class ElasticsearchExprValueFactory {
     } else if (type.equals(ES_TEXT_KEYWORD)) {
       return new ElasticsearchExprTextKeywordValue((String) value);
     } else {
-      throw new IllegalStateException(String.format(
-              "Unsupported type %s to construct expression value from object for "
-                  + "field: %s, value: %s.", type.typeName(), field, value));
+      return nullValue();
     }
   }
 
