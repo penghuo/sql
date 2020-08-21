@@ -15,16 +15,27 @@
 
 package com.amazon.opendistroforelasticsearch.sql.expression.operator.arthmetic;
 
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.BOOLEAN;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.DOUBLE;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.FLOAT;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.INTEGER;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.LONG;
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.doubleArgFunc;
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.noArgFunction;
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.tripleArgFunc;
 import static com.amazon.opendistroforelasticsearch.sql.expression.operator.OperatorUtils.unaryOperator;
 
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprBooleanValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprDoubleValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprFloatValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprIntegerValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprLongValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunctionRepository;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionBuilder;
+import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionDSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionName;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionResolver;
 import com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature;
@@ -37,6 +48,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import lombok.experimental.UtilityClass;
 
@@ -86,10 +98,20 @@ public class MathematicalFunction {
    * LONG FLOAT -> FLOAT DOUBLE -> DOUBLE
    */
   private static FunctionResolver abs() {
-    return new FunctionResolver(
-        BuiltinFunctionName.ABS.getName(),
-        singleArgumentFunction(
-            BuiltinFunctionName.ABS.getName(), Math::abs, Math::abs, Math::abs, Math::abs));
+    return FunctionDSL.define(BuiltinFunctionName.ABS.getName(),
+        FunctionDSL.impl(
+            FunctionDSL.nullMissingHandling((v1) -> new ExprDoubleValue(v1.doubleValue())),
+            DOUBLE, DOUBLE),
+        FunctionDSL.impl(
+            FunctionDSL.nullMissingHandling((v1) -> new ExprLongValue(v1.longValue())),
+            LONG, LONG),
+        FunctionDSL.impl(
+            FunctionDSL.nullMissingHandling((v1) -> new ExprFloatValue(v1.floatValue())),
+            FLOAT, FLOAT),
+        FunctionDSL.impl(
+            FunctionDSL.nullMissingHandling((v1) -> new ExprIntegerValue(v1.integerValue())),
+            INTEGER, INTEGER)
+    );
   }
 
   /**
@@ -107,7 +129,7 @@ public class MathematicalFunction {
                     functionName,
                     v -> ((int) Math.ceil(v)),
                     ExprValueUtils::getDoubleValue,
-                    ExprCoreType.INTEGER))
+                    INTEGER))
             .build());
   }
 
@@ -122,7 +144,7 @@ public class MathematicalFunction {
                     functionName,
                     v -> ((int) Math.ceil(v)),
                     ExprValueUtils::getDoubleValue,
-                    ExprCoreType.INTEGER))
+                    INTEGER))
             .build());
   }
 
@@ -139,7 +161,7 @@ public class MathematicalFunction {
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
             .put(
                 new FunctionSignature(functionName,
-                    Arrays.asList(ExprCoreType.STRING, ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
+                    Arrays.asList(ExprCoreType.STRING, INTEGER, INTEGER)),
                 tripleArgFunc(functionName,
                     (num, fromBase, toBase) -> Integer.toString(
                         Integer.parseInt(num, fromBase), toBase),
@@ -148,7 +170,7 @@ public class MathematicalFunction {
             .put(
                 new FunctionSignature(functionName,
                     Arrays.asList(
-                        ExprCoreType.INTEGER, ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
+                        INTEGER, INTEGER, INTEGER)),
                 tripleArgFunc(functionName,
                     (num, fromBase, toBase) -> Integer.toString(
                         Integer.parseInt(num.toString(), fromBase), toBase),
@@ -176,7 +198,7 @@ public class MathematicalFunction {
                       crc.update(v.getBytes());
                       return crc.getValue();
                     },
-                    ExprValueUtils::getStringValue, ExprCoreType.LONG))
+                    ExprValueUtils::getStringValue, LONG))
             .build());
   }
 
@@ -219,7 +241,7 @@ public class MathematicalFunction {
                     functionName,
                     v -> ((int) Math.floor(v)),
                     ExprValueUtils::getDoubleValue,
-                    ExprCoreType.INTEGER))
+                    INTEGER))
             .build());
   }
 
@@ -344,12 +366,12 @@ public class MathematicalFunction {
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
             .put(
                 new FunctionSignature(functionName, Collections.emptyList()),
-                noArgFunction(functionName, () -> new Random().nextFloat(), ExprCoreType.FLOAT))
+                noArgFunction(functionName, () -> new Random().nextFloat(), FLOAT))
             .put(
-                new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER)),
+                new FunctionSignature(functionName, Arrays.asList(INTEGER)),
                 unaryOperator(
                     functionName, n -> new Random(n).nextFloat(), ExprValueUtils::getIntegerValue,
-                    ExprCoreType.FLOAT))
+                    FLOAT))
             .build());
   }
 
@@ -367,17 +389,17 @@ public class MathematicalFunction {
     return new FunctionResolver(functionName,
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
             .put(
-                new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER)),
+                new FunctionSignature(functionName, Arrays.asList(INTEGER)),
                 unaryOperator(
                     functionName, v -> (long) Math.round(v), ExprValueUtils::getIntegerValue,
-                    ExprCoreType.LONG))
+                    LONG))
             .put(
-                new FunctionSignature(functionName, Arrays.asList(ExprCoreType.LONG)),
+                new FunctionSignature(functionName, Arrays.asList(LONG)),
                 unaryOperator(
                     functionName, v -> (long) Math.round(v), ExprValueUtils::getLongValue,
-                    ExprCoreType.LONG))
+                    LONG))
             .put(
-                new FunctionSignature(functionName, Arrays.asList(ExprCoreType.FLOAT)),
+                new FunctionSignature(functionName, Arrays.asList(FLOAT)),
                 unaryOperator(
                     functionName, v -> (double) Math.round(v), ExprValueUtils::getFloatValue,
                     ExprCoreType.DOUBLE))
@@ -388,28 +410,28 @@ public class MathematicalFunction {
                     ExprCoreType.DOUBLE))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(INTEGER, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.HALF_UP).longValue(),
                     ExprValueUtils::getIntegerValue, ExprValueUtils::getIntegerValue,
-                    ExprCoreType.LONG))
+                    LONG))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.LONG, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(LONG, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.HALF_UP).longValue(),
                     ExprValueUtils::getLongValue, ExprValueUtils::getIntegerValue,
-                    ExprCoreType.LONG))
+                    LONG))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.FLOAT, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(FLOAT, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.HALF_UP).doubleValue(),
                     ExprValueUtils::getFloatValue, ExprValueUtils::getIntegerValue,
                     ExprCoreType.DOUBLE))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.DOUBLE, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(ExprCoreType.DOUBLE, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.HALF_UP).doubleValue(),
                     ExprValueUtils::getDoubleValue, ExprValueUtils::getIntegerValue,
@@ -434,7 +456,7 @@ public class MathematicalFunction {
                     functionName, Arrays.asList(ExprCoreType.DOUBLE)),
                 unaryOperator(
                     functionName, v -> (int) Math.signum(v), ExprValueUtils::getDoubleValue,
-                    ExprCoreType.INTEGER))
+                    INTEGER))
             .build());
   }
 
@@ -468,28 +490,28 @@ public class MathematicalFunction {
         new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(INTEGER, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.DOWN).longValue(),
                     ExprValueUtils::getIntegerValue, ExprValueUtils::getIntegerValue,
-                    ExprCoreType.LONG))
+                    LONG))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.LONG, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(LONG, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.DOWN).longValue(),
                     ExprValueUtils::getLongValue, ExprValueUtils::getIntegerValue,
-                    ExprCoreType.LONG))
+                    LONG))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.FLOAT, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(FLOAT, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.DOWN).doubleValue(),
                     ExprValueUtils::getFloatValue, ExprValueUtils::getIntegerValue,
                     ExprCoreType.DOUBLE))
             .put(
                 new FunctionSignature(
-                    functionName, Arrays.asList(ExprCoreType.DOUBLE, ExprCoreType.INTEGER)),
+                    functionName, Arrays.asList(ExprCoreType.DOUBLE, INTEGER)),
                 doubleArgFunc(functionName,
                     (v1, v2) -> new BigDecimal(v1).setScale(v2, RoundingMode.DOWN).doubleValue(),
                     ExprValueUtils::getDoubleValue, ExprValueUtils::getIntegerValue,
@@ -657,15 +679,15 @@ public class MathematicalFunction {
       Function<Double, Double> doubleFunc) {
     ImmutableMap.Builder<FunctionSignature, FunctionBuilder> builder = new ImmutableMap.Builder<>();
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.INTEGER)),
+        new FunctionSignature(functionName, Arrays.asList(INTEGER)),
         unaryOperator(
-            functionName, integerFunc, ExprValueUtils::getIntegerValue, ExprCoreType.INTEGER));
+            functionName, integerFunc, ExprValueUtils::getIntegerValue, INTEGER));
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.LONG)),
-        unaryOperator(functionName, longFunc, ExprValueUtils::getLongValue, ExprCoreType.LONG));
+        new FunctionSignature(functionName, Arrays.asList(LONG)),
+        unaryOperator(functionName, longFunc, ExprValueUtils::getLongValue, LONG));
     builder.put(
-        new FunctionSignature(functionName, Arrays.asList(ExprCoreType.FLOAT)),
-        unaryOperator(functionName, floatFunc, ExprValueUtils::getFloatValue, ExprCoreType.FLOAT));
+        new FunctionSignature(functionName, Arrays.asList(FLOAT)),
+        unaryOperator(functionName, floatFunc, ExprValueUtils::getFloatValue, FLOAT));
     builder.put(
         new FunctionSignature(functionName, Arrays.asList(ExprCoreType.DOUBLE)),
         unaryOperator(
@@ -694,22 +716,22 @@ public class MathematicalFunction {
     return new ImmutableMap.Builder<FunctionSignature, FunctionBuilder>()
         .put(
             new FunctionSignature(
-                functionName, Arrays.asList(ExprCoreType.INTEGER, ExprCoreType.INTEGER)),
+                functionName, Arrays.asList(INTEGER, INTEGER)),
             doubleArgFunc(
                 functionName, intFunc, ExprValueUtils::getIntegerValue,
-                ExprValueUtils::getIntegerValue, ExprCoreType.INTEGER))
+                ExprValueUtils::getIntegerValue, INTEGER))
         .put(
             new FunctionSignature(
-                functionName, Arrays.asList(ExprCoreType.LONG, ExprCoreType.LONG)),
+                functionName, Arrays.asList(LONG, LONG)),
             doubleArgFunc(
                 functionName, longFunc, ExprValueUtils::getLongValue,
-                ExprValueUtils::getLongValue, ExprCoreType.LONG))
+                ExprValueUtils::getLongValue, LONG))
         .put(
             new FunctionSignature(
-                functionName, Arrays.asList(ExprCoreType.FLOAT, ExprCoreType.FLOAT)),
+                functionName, Arrays.asList(FLOAT, FLOAT)),
             doubleArgFunc(
                 functionName, floatFunc, ExprValueUtils::getFloatValue,
-                ExprValueUtils::getFloatValue, ExprCoreType.FLOAT))
+                ExprValueUtils::getFloatValue, FLOAT))
         .put(
             new FunctionSignature(
                 functionName, Arrays.asList(ExprCoreType.DOUBLE, ExprCoreType.DOUBLE)),

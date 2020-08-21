@@ -39,7 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.EqualsAndHashCode;
 import org.apache.lucene.index.LeafReaderContext;
-import org.elasticsearch.SpecialPermission;
 import org.elasticsearch.index.fielddata.ScriptDocValues;
 import org.elasticsearch.script.FilterScript;
 import org.elasticsearch.search.lookup.SearchLookup;
@@ -56,22 +55,26 @@ class ExpressionFilterScript extends FilterScript {
    */
   private final Expression expression;
 
+  private final ElasticsearchExprValueFactory valueFactory;
+
+  private Set<ReferenceExpression> fields;
+
   public ExpressionFilterScript(Expression expression,
                                 SearchLookup lookup,
                                 LeafReaderContext context,
                                 Map<String, Object> params) {
     super(params, lookup, context);
     this.expression = expression;
+    this.valueFactory =
+        AccessController.doPrivileged((PrivilegedAction<ElasticsearchExprValueFactory>) () -> {
+          this.fields = extractFields(expression);
+          return buildValueFactory(fields);
+        });
   }
 
   @Override
   public boolean execute() {
-    // Check current script are not being called by unprivileged code.
-    SpecialPermission.check();
-
     return AccessController.doPrivileged((PrivilegedAction<Boolean>) () -> {
-      Set<ReferenceExpression> fields = extractFields(expression);
-      ElasticsearchExprValueFactory valueFactory = buildValueFactory(fields);
       Environment<Expression, ExprValue> valueEnv = buildValueEnv(fields, valueFactory);
       ExprValue result = evaluateExpression(valueEnv);
       return (Boolean) result.value();
