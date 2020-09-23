@@ -22,15 +22,12 @@ import org.apache.lucene.search.TotalHits;
 import org.apache.lucene.search.TotalHits.Relation;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
-import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,11 +64,7 @@ public class UnionExecutor implements ElasticHitsExecutor {
     private void fillInternalSearchHits(List<SearchHit> unionHits, SearchHit[] hits,
                                         Map<String, String> fieldNameToAlias) {
         for (SearchHit hit : hits) {
-            Map<String, DocumentField> documentFields = new HashMap<>();
-            Map<String, DocumentField> metaFields = new HashMap<>();
-            hit.getFields().forEach((fieldName, docField) ->
-                (MapperService.META_FIELDS_BEFORE_7DOT8.contains(fieldName) ? metaFields : documentFields).put(fieldName, docField));
-            SearchHit searchHit = new SearchHit(currentId, hit.getId(), new Text(hit.getType()), documentFields, metaFields);
+            SearchHit searchHit = new SearchHit(currentId, hit.getId(), new Text(hit.getType()), hit.getFields());
             searchHit.sourceRef(hit.getSourceRef());
             searchHit.getSourceAsMap().clear();
             Map<String, Object> sourceAsMap = hit.getSourceAsMap();

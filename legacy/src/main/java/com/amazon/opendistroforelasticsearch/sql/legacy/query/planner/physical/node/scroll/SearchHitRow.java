@@ -17,9 +17,7 @@ package com.amazon.opendistroforelasticsearch.sql.legacy.query.planner.physical.
 
 import com.amazon.opendistroforelasticsearch.sql.legacy.query.planner.physical.Row;
 import com.google.common.base.Strings;
-import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
-import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.search.SearchHit;
 
 import java.util.HashMap;
@@ -152,18 +150,13 @@ class SearchHitRow implements Row<SearchHit> {
     }
 
     private SearchHit cloneHit(Row<SearchHit> other) {
-        Map<String, DocumentField> documentFields = new HashMap<>();
-        Map<String, DocumentField> metaFields = new HashMap<>();
-        hit.getFields().forEach((fieldName, docField) ->
-            (MapperService.META_FIELDS_BEFORE_7DOT8.contains(fieldName) ? metaFields : documentFields).put(fieldName, docField));
         SearchHit combined = new SearchHit(
                 hit.docId(),
                 hit.getId() + "|" + (other == NULL ? "0" : ((SearchHitRow) other).hit.getId()),
                 new Text(
                         hit.getType() + "|" + (other == NULL ? null : ((SearchHitRow) other).hit.getType())
                 ),
-                documentFields,
-                metaFields
+                hit.getFields()
         );
         combined.sourceRef(hit.getSourceRef());
         combined.getSourceAsMap().clear();

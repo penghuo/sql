@@ -115,9 +115,7 @@ public class SQLPlugin extends Plugin implements ActionPlugin, ScriptPlugin {
                                              Environment environment,
                                              NodeEnvironment nodeEnvironment,
                                              NamedWriteableRegistry namedWriteableRegistry,
-                                             IndexNameExpressionResolver indexNameResolver,
-                                             Supplier<RepositoriesService>
-                                                       repositoriesServiceSupplier) {
+                                             IndexNameExpressionResolver indexNameResolver) {
     this.clusterService = clusterService;
     this.pluginSettings = new ElasticsearchSettings(clusterService.getClusterSettings());
 
@@ -127,7 +125,7 @@ public class SQLPlugin extends Plugin implements ActionPlugin, ScriptPlugin {
     return super
         .createComponents(client, clusterService, threadPool, resourceWatcherService, scriptService,
             contentRegistry, environment, nodeEnvironment, namedWriteableRegistry,
-            indexNameResolver, repositoriesServiceSupplier);
+            indexNameResolver);
   }
 
   @Override
@@ -136,7 +134,7 @@ public class SQLPlugin extends Plugin implements ActionPlugin, ScriptPlugin {
         new FixedExecutorBuilder(
             settings,
             AsyncRestExecutor.SQL_WORKER_THREAD_POOL_NAME,
-            EsExecutors.allocatedProcessors(settings),
+            EsExecutors.numberOfProcessors(settings),
             1000,
             null
         )

@@ -34,7 +34,6 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
@@ -135,12 +134,7 @@ public class MinusExecutor implements ElasticHitsExecutor {
             ArrayList<Object> values = new ArrayList<>();
             values.add(result);
             fields.put(fieldName, new DocumentField(fieldName, values));
-            Map<String, DocumentField> documentFields = new HashMap<>();
-            Map<String, DocumentField> metaFields = new HashMap<>();
-            someHit.getFields().forEach((field, docField) ->
-                (MapperService.META_FIELDS_BEFORE_7DOT8.contains(field) ? metaFields : documentFields).put(field, docField));
-            SearchHit searchHit = new SearchHit(currentId, currentId + "", new Text(someHit.getType()),
-                    documentFields, metaFields);
+            SearchHit searchHit = new SearchHit(currentId, currentId + "", new Text(someHit.getType()), fields);
             searchHit.sourceRef(someHit.getSourceRef());
             searchHit.getSourceAsMap().clear();
             Map<String, Object> sourceAsMap = new HashMap<>();
@@ -161,12 +155,8 @@ public class MinusExecutor implements ElasticHitsExecutor {
             ArrayList<Object> values = new ArrayList<>();
             values.add(result);
             SearchHit originalHit = result.getOriginalHit();
-            Map<String, DocumentField> documentFields = new HashMap<>();
-            Map<String, DocumentField> metaFields = new HashMap<>();
-            originalHit.getFields().forEach((fieldName, docField) ->
-                (MapperService.META_FIELDS_BEFORE_7DOT8.contains(fieldName) ? metaFields : documentFields).put(fieldName, docField));
             SearchHit searchHit = new SearchHit(currentId, originalHit.getId(), new Text(originalHit.getType()),
-                    documentFields, metaFields);
+                    originalHit.getFields());
             searchHit.sourceRef(originalHit.getSourceRef());
             searchHit.getSourceAsMap().clear();
             Map<String, Object> sourceAsMap = result.getFlattenMap();

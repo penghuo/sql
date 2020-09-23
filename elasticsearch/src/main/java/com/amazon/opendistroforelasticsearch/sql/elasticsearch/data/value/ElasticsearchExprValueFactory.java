@@ -40,6 +40,7 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprDoubleValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprFloatValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprIntegerValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprLongValue;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprNullValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprStringValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprTimestampValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprTupleValue;
@@ -128,12 +129,9 @@ public class ElasticsearchExprValueFactory {
     } else if (type.equals(ES_IP)) {
       return new ElasticsearchExprIpValue(value.asText());
     } else if (type.equals(ES_GEO_POINT)) {
-      return new ElasticsearchExprGeoPointValue(value.get("lat").doubleValue(),
-          value.get("lon").doubleValue());
+      return ExprNullValue.of();
     } else {
-      throw new IllegalStateException(
-          String.format(
-              "Unsupported type: %s for field: %s, value: %s.", type.typeName(), field, value));
+      return ExprNullValue.of();
     }
   }
 
@@ -177,9 +175,7 @@ public class ElasticsearchExprValueFactory {
     } else if (type.equals(ES_TEXT_KEYWORD)) {
       return new ElasticsearchExprTextKeywordValue((String) value);
     } else {
-      throw new IllegalStateException(String.format(
-          "Unsupported type %s to construct expression value from object for "
-              + "field: %s, value: %s.", type.typeName(), field, value));
+      return ExprNullValue.of();
     }
   }
 

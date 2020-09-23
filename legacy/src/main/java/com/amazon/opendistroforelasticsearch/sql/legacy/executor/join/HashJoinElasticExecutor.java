@@ -26,10 +26,8 @@ import com.amazon.opendistroforelasticsearch.sql.legacy.query.maker.QueryMaker;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -184,13 +182,9 @@ public class HashJoinElasticExecutor extends ElasticJoinExecutor {
                             onlyReturnedFields(copiedSource, secondTableRequest.getReturnedFields(),
                                     secondTableRequest.getOriginalSelect().isSelectAll());
 
-                            Map<String, DocumentField> documentFields = new HashMap<>();
-                            Map<String, DocumentField> metaFields = new HashMap<>();
-                            matchingHit.getFields().forEach((fieldName, docField) ->
-                                (MapperService.META_FIELDS_BEFORE_7DOT8.contains(fieldName) ? metaFields : documentFields).put(fieldName, docField));
                             SearchHit searchHit = new SearchHit(matchingHit.docId(), combinedId,
                                     new Text(matchingHit.getType() + "|" + secondTableHit.getType()),
-                                    documentFields, metaFields);
+                                    matchingHit.getFields());
                             searchHit.sourceRef(matchingHit.getSourceRef());
                             searchHit.getSourceAsMap().clear();
                             searchHit.getSourceAsMap().putAll(matchingHit.getSourceAsMap());
@@ -245,12 +239,7 @@ public class HashJoinElasticExecutor extends ElasticJoinExecutor {
                         optimizationTermsFilterStructure.get(comparisonID));
 
                 //int docid , id
-                Map<String, DocumentField> documentFields = new HashMap<>();
-                Map<String, DocumentField> metaFields = new HashMap<>();
-                hit.getFields().forEach((fieldName, docField) ->
-                    (MapperService.META_FIELDS_BEFORE_7DOT8.contains(fieldName) ? metaFields : documentFields).put(fieldName, docField));
-                SearchHit searchHit = new SearchHit(resultIds, hit.getId(), new Text(hit.getType()), documentFields
-                        , metaFields);
+                SearchHit searchHit = new SearchHit(resultIds, hit.getId(), new Text(hit.getType()), hit.getFields());
                 searchHit.sourceRef(hit.getSourceRef());
 
                 onlyReturnedFields(searchHit.getSourceAsMap(), firstTableRequest.getReturnedFields(),

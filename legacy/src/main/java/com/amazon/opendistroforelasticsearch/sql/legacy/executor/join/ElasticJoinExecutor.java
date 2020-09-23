@@ -31,11 +31,9 @@ import org.apache.lucene.search.TotalHits.Relation;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestStatus;
@@ -218,11 +216,7 @@ public abstract class ElasticJoinExecutor implements ElasticHitsExecutor {
         String unmatchedId = hit.getId() + "|0";
         Text unamatchedType = new Text(hit.getType() + "|null");
 
-        Map<String, DocumentField> documentFields = new HashMap<>();
-        Map<String, DocumentField> metaFields = new HashMap<>();
-        hit.getFields().forEach((fieldName, docField) ->
-            (MapperService.META_FIELDS_BEFORE_7DOT8.contains(fieldName) ? metaFields : documentFields).put(fieldName, docField));
-        SearchHit searchHit = new SearchHit(docId, unmatchedId, unamatchedType, documentFields, metaFields);
+        SearchHit searchHit = new SearchHit(docId, unmatchedId, unamatchedType, hit.getFields());
 
         searchHit.sourceRef(hit.getSourceRef());
         searchHit.getSourceAsMap().clear();

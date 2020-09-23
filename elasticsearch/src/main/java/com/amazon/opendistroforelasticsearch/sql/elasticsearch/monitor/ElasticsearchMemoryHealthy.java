@@ -23,7 +23,6 @@ import lombok.extern.log4j.Log4j2;
 /**
  * Elasticsearch Memory Monitor.
  */
-@Log4j2
 public class ElasticsearchMemoryHealthy {
   private final RandomFail randomFail;
   private final MemoryUsage memoryUsage;
@@ -46,13 +45,13 @@ public class ElasticsearchMemoryHealthy {
    */
   public boolean isMemoryHealthy(long limitBytes) {
     final long memoryUsage = this.memoryUsage.usage();
-    log.debug("Memory usage:{}, limit:{}", memoryUsage, limitBytes);
+
     if (memoryUsage < limitBytes) {
       return true;
     } else {
-      log.warn("Memory usage:{} exceed limit:{}", memoryUsage, limitBytes);
+
       if (randomFail.shouldFail()) {
-        log.warn("Fast failure the current request");
+
         throw new MemoryUsageExceedFastFailureException();
       } else {
         throw new MemoryUsageExceedException();

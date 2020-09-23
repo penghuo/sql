@@ -113,7 +113,6 @@ public class ElasticsearchIndex implements Table {
                 new FilterQueryBuilder(new DefaultExpressionSerializer());
 
             QueryBuilder query = queryBuilder.build(node.getCondition());
-
             context.pushDown(query);
             return visitChild(node, context);
           }

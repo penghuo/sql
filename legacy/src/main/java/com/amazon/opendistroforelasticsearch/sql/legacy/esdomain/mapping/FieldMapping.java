@@ -22,7 +22,7 @@ import com.amazon.opendistroforelasticsearch.sql.legacy.utils.StringUtils;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
-import static org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetadata;
+import static org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetaData;
 
 /**
  * Field mapping that parses native ES mapping.
@@ -40,7 +40,7 @@ public class FieldMapping {
     /**
      * Native mapping information returned from ES
      */
-    private final Map<String, FieldMappingMetadata> typeMappings;
+    private final Map<String, FieldMappingMetaData> typeMappings;
 
     /**
      * Maps a field name to Field object that specified in query explicitly
@@ -52,7 +52,7 @@ public class FieldMapping {
     }
 
     public FieldMapping(String fieldName,
-                        Map<String, FieldMappingMetadata> typeMappings,
+                        Map<String, FieldMappingMetaData> typeMappings,
                         Map<String, Field> specifiedFieldByNames) {
 
         this.fieldName = fieldName;
@@ -120,26 +120,24 @@ public class FieldMapping {
     }
 
     /**
-     * Find field type in ES Get Field Mapping API response. Note that Get Field Mapping API does NOT return
-     * the type for object or nested field. In this case, object type is used as default under the assumption
-     * that the field queried here must exist (which is true if semantic analyzer is enabled).
-     *
-     * @return      field type if found in mapping, otherwise "object" type returned
+     * Used to retrieve the type of fields from metaData map structures for both regular and nested fields
      */
     @SuppressWarnings("unchecked")
     public String type() {
-        FieldMappingMetadata metaData = typeMappings.getOrDefault(fieldName, FieldMappingMetadata.NULL);
-        if (metaData.isNull()) {
-            return DescribeResultSet.DEFAULT_OBJECT_DATATYPE;
-        }
-
+        FieldMappingMetaData metaData = typeMappings.get(fieldName);
         Map<String, Object> source = metaData.sourceAsMap();
         String[] fieldPath = fieldName.split("\\.");
 
-        // For object/nested field, fieldName is full path though only innermost field name present in mapping
-        // For example, fieldName='employee.location.city', metaData='{"city":{"type":"text"}}'
-        String innermostFieldName = (fieldPath.length == 1) ? fieldName : fieldPath[fieldPath.length - 1];
-        Map<String, Object> fieldMapping = (Map<String, Object>) source.get(innermostFieldName);
+        /*
+         * When field is not nested the metaData source is fieldName -> type
+         * When it is nested or contains "." in general (ex. fieldName.nestedName) the source is nestedName -> type
+         */
+        String root = (fieldPath.length == 1) ? fieldName : fieldPath[1];
+        Map<String, Object> fieldMapping = (Map<String, Object>) source.get(root);
+        for (int i = 2; i < fieldPath.length; i++) {
+            fieldMapping = (Map<String, Object>) fieldMapping.get(fieldPath[i]);
+        }
+
         return (String) fieldMapping.get("type");
     }
 
