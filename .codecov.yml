@@ -18,3 +18,14 @@ coverage:
         flags:
           - sql-jdbc
           - unittests
+flags:
+  sql:
+    paths:
+      - elasticsearch
+      - core
+      - sql
+      - ppl
+      - common
+  sql-jdbc:
+    paths:
+      - sql-jdbc
