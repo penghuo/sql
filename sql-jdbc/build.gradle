@@ -189,6 +189,7 @@ jacoco {
 jacocoTestReport {
     reports {
         html.enabled true
+        xml.enabled true
     }
 }
 test.finalizedBy(project.tasks.jacocoTestReport)

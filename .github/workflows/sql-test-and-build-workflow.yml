@@ -28,6 +28,7 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        flags: sql,unittests
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v1
