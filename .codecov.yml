@@ -21,11 +21,11 @@ coverage:
 flags:
   sql:
     paths:
-      - elasticsearch
       - core
       - sql
       - ppl
-      - common
+      - elasticsearch
+      - protocol
   sql-jdbc:
     paths:
       - sql-jdbc

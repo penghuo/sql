@@ -31,3 +31,10 @@ jobs:
       with:
         name: sql-jdbc
         path: sql-jdbc/sql-jdbc-builds
+
+    - name: Upload SQL JDBC Coverage Report
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./build/reports/jacoco/test/jacocoTestReport.xml
+        flags: sql-jdbc,unittests
