@@ -30,8 +30,10 @@ import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import org.elasticsearch.script.AggregationScript;
 import org.elasticsearch.script.FilterScript;
+import org.elasticsearch.script.NumberSortScript;
 import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptEngine;
+import org.elasticsearch.script.StringSortScript;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -66,7 +68,8 @@ class ExpressionScriptEngineTest {
     when(serializer.deserialize("test code")).thenReturn(expression);
 
     assertThat(scriptEngine.getSupportedContexts(),
-        contains(FilterScript.CONTEXT, AggregationScript.CONTEXT));
+        contains(FilterScript.CONTEXT, AggregationScript.CONTEXT, StringSortScript.CONTEXT,
+            NumberSortScript.CONTEXT));
 
     Object actualFactory = scriptEngine.compile(
         "test", "test code", FilterScript.CONTEXT, emptyMap());

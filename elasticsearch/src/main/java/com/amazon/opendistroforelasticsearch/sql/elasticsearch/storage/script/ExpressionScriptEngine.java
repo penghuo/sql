@@ -18,6 +18,9 @@ package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.script;
 
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.script.aggregation.ExpressionAggregationScriptFactory;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.script.filter.ExpressionFilterScriptFactory;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.script.sort.ExpressionNumberSortScript;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.script.sort.ExpressionNumberSortScriptFactory;
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.script.sort.ExpressionStringSortScriptFactory;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage.serialization.ExpressionSerializer;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.google.common.collect.ImmutableMap;
@@ -27,8 +30,10 @@ import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.elasticsearch.script.AggregationScript;
 import org.elasticsearch.script.FilterScript;
+import org.elasticsearch.script.NumberSortScript;
 import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptEngine;
+import org.elasticsearch.script.StringSortScript;
 
 /**
  * Custom expression script engine that supports using core engine expression code in DSL
@@ -49,6 +54,8 @@ public class ExpressionScriptEngine implements ScriptEngine {
       new ImmutableMap.Builder<ScriptContext<?>, Function<Expression, Object>>()
           .put(FilterScript.CONTEXT, ExpressionFilterScriptFactory::new)
           .put(AggregationScript.CONTEXT, ExpressionAggregationScriptFactory::new)
+          .put(StringSortScript.CONTEXT, ExpressionStringSortScriptFactory::new)
+          .put(NumberSortScript.CONTEXT, ExpressionNumberSortScriptFactory::new)
           .build();
 
   /**
