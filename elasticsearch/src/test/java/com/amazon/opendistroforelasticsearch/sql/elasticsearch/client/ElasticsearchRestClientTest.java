@@ -41,14 +41,17 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.ClusterClient;
+import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
@@ -239,6 +242,27 @@ class ElasticsearchRestClientTest {
     ElasticsearchScrollRequest request = new ElasticsearchScrollRequest("test", factory);
     request.setScrollId("scroll123");
     assertThrows(IllegalStateException.class, () -> client.cleanup(request));
+  }
+
+  @Test
+  void getIndices() throws IOException {
+    final IndicesClient indicesClient = mock(IndicesClient.class);
+    when(restClient.indices()).thenReturn(indicesClient);
+    when(indicesClient.get(any(GetIndexRequest.class), any(RequestOptions.class)))
+        .thenReturn(getIndexResponse);
+    when(getIndexResponse.getIndices()).thenReturn(new String[] {"index"});
+
+    final List<String> indices = client.indices();
+    assertFalse(indices.isEmpty());
+  }
+
+  @Test
+  void getIndicesWithIOException() throws IOException {
+    final IndicesClient indicesClient = mock(IndicesClient.class);
+    when(restClient.indices()).thenReturn(indicesClient);
+    when(indicesClient.get(any(GetIndexRequest.class), any(RequestOptions.class)))
+        .thenThrow(new IOException());
+    assertThrows(IllegalStateException.class, () -> client.indices());
   }
 
   @Test
