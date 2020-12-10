@@ -19,6 +19,7 @@ package com.amazon.opendistroforelasticsearch.sql.elasticsearch.storage;
 import static com.amazon.opendistroforelasticsearch.sql.utils.SystemIndexUtils.TABLE_INFO;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import com.amazon.opendistroforelasticsearch.sql.common.setting.Settings;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
@@ -34,10 +35,9 @@ class ElasticsearchStorageEngineTest {
 
   @Mock private ElasticsearchClient client;
 
-  @Mock private Settings settings;
-
   @Test
   public void getTable() {
+    Settings settings = mock(Settings.class);
     ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client, settings);
     Table table = engine.getTable("test");
     assertNotNull(table);
@@ -45,7 +45,7 @@ class ElasticsearchStorageEngineTest {
 
   @Test
   public void getSystemTable() {
-    ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client, settings);
+    ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client, null);
     Table table = engine.getTable(TABLE_INFO);
     assertNotNull(table);
     assertTrue(table instanceof ElasticsearchSystemIndex);
