@@ -41,17 +41,14 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.ClusterClient;
-import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
@@ -243,24 +240,24 @@ class ElasticsearchRestClientTest {
     request.setScrollId("scroll123");
     assertThrows(IllegalStateException.class, () -> client.cleanup(request));
   }
-  
+
   @Test
   void meta() throws IOException {
     ClusterGetSettingsResponse settingsResponse = mock(ClusterGetSettingsResponse.class);
-    Settings defaultSettings = mock(Settings.class);
-    final ClusterClient clusterClient = mock(ClusterClient.class);
+    Settings defaultSettings = Settings.builder().loadFromMap(ImmutableMap.of("cluster.name",
+        "elasticsearch")).build();
+    ClusterClient clusterClient = mock(ClusterClient.class);
     when(restClient.cluster()).thenReturn(clusterClient);
     when(clusterClient.getSettings(any(), any(RequestOptions.class))).thenReturn(settingsResponse);
     when(settingsResponse.getDefaultSettings()).thenReturn(defaultSettings);
-    when(defaultSettings.get("cluster.name", "elasticsearch")).thenReturn("cluster-name");
 
     final Map<String, String> meta = client.meta();
-    assertEquals("cluster-name", meta.get(META_CLUSTER_NAME));
+    assertEquals("elasticsearch", meta.get(META_CLUSTER_NAME));
   }
 
   @Test
   void metaWithIOException() throws IOException {
-    final ClusterClient clusterClient = mock(ClusterClient.class);
+    ClusterClient clusterClient = mock(ClusterClient.class);
     when(restClient.cluster()).thenReturn(clusterClient);
     when(clusterClient.getSettings(any(), any(RequestOptions.class))).thenThrow(new IOException());
     assertThrows(IllegalStateException.class, () -> client.meta());
