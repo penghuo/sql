@@ -245,41 +245,6 @@ class ElasticsearchRestClientTest {
   }
 
   @Test
-  void getIndices() throws IOException {
-    final IndicesClient indicesClient = mock(IndicesClient.class);
-    when(restClient.indices()).thenReturn(indicesClient);
-    when(indicesClient.get(any(GetIndexRequest.class), any(RequestOptions.class)))
-        .thenReturn(getIndexResponse);
-    when(getIndexResponse.getIndices()).thenReturn(new String[] {"index"});
-
-    final List<String> indices = client.indices();
-    assertFalse(indices.isEmpty());
-  }
-
-  @Test
-  void getIndicesWithIOException() throws IOException {
-    final IndicesClient indicesClient = mock(IndicesClient.class);
-    when(restClient.indices()).thenReturn(indicesClient);
-    when(indicesClient.get(any(GetIndexRequest.class), any(RequestOptions.class)))
-        .thenThrow(new IOException());
-    assertThrows(IllegalStateException.class, () -> client.indices());
-  }
-
-  @Test
-  void meta() throws IOException {
-    ClusterGetSettingsResponse settingsResponse = mock(ClusterGetSettingsResponse.class);
-    Settings defaultSettings = mock(Settings.class);
-    final ClusterClient clusterClient = mock(ClusterClient.class);
-    when(restClient.cluster()).thenReturn(clusterClient);
-    when(clusterClient.getSettings(any(), any(RequestOptions.class))).thenReturn(settingsResponse);
-    when(settingsResponse.getDefaultSettings()).thenReturn(defaultSettings);
-    when(defaultSettings.get("cluster.name", "elasticsearch")).thenReturn("cluster-name");
-
-    final Map<String, String> meta = client.meta();
-    assertEquals("cluster-name", meta.get(META_CLUSTER_NAME));
-  }
-
-  @Test
   void metaWithIOException() throws IOException {
     final ClusterClient clusterClient = mock(ClusterClient.class);
     when(restClient.cluster()).thenReturn(clusterClient);
