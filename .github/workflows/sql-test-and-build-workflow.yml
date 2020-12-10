@@ -16,7 +16,7 @@ jobs:
         java-version: 1.14
     
     - name: Build with Gradle
-      run: ./gradlew build assemble
+      run: ./gradlew elasticsearch:build
 
     - name: Create Artifact Path
       run: |
