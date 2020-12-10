@@ -47,6 +47,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.admin.cluster.settings.ClusterGetSettingsResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.ClusterClient;
+import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
@@ -244,7 +246,9 @@ class ElasticsearchRestClientTest {
 
   @Test
   void getIndices() throws IOException {
-    when(restClient.indices().get(any(GetIndexRequest.class), any(RequestOptions.class)))
+    final IndicesClient indicesClient = mock(IndicesClient.class);
+    when(restClient.indices()).thenReturn(indicesClient);
+    when(indicesClient.get(any(GetIndexRequest.class), any(RequestOptions.class)))
         .thenReturn(getIndexResponse);
     when(getIndexResponse.getIndices()).thenReturn(new String[] {"index"});
 
@@ -254,7 +258,9 @@ class ElasticsearchRestClientTest {
 
   @Test
   void getIndicesWithIOException() throws IOException {
-    when(restClient.indices().get(any(GetIndexRequest.class), any(RequestOptions.class)))
+    final IndicesClient indicesClient = mock(IndicesClient.class);
+    when(restClient.indices()).thenReturn(indicesClient);
+    when(indicesClient.get(any(GetIndexRequest.class), any(RequestOptions.class)))
         .thenThrow(new IOException());
     assertThrows(IllegalStateException.class, () -> client.indices());
   }
@@ -263,8 +269,9 @@ class ElasticsearchRestClientTest {
   void meta() throws IOException {
     ClusterGetSettingsResponse settingsResponse = mock(ClusterGetSettingsResponse.class);
     Settings defaultSettings = mock(Settings.class);
-    when(restClient.cluster().getSettings(any(), any(RequestOptions.class)))
-        .thenReturn(settingsResponse);
+    final ClusterClient clusterClient = mock(ClusterClient.class);
+    when(restClient.cluster()).thenReturn(clusterClient);
+    when(clusterClient.getSettings(any(), any(RequestOptions.class))).thenReturn(settingsResponse);
     when(settingsResponse.getDefaultSettings()).thenReturn(defaultSettings);
     when(defaultSettings.get("cluster.name", "elasticsearch")).thenReturn("cluster-name");
 
@@ -274,9 +281,9 @@ class ElasticsearchRestClientTest {
 
   @Test
   void metaWithIOException() throws IOException {
-    when(restClient.cluster().getSettings(any(), any(RequestOptions.class)))
-        .thenThrow(new IOException());
-
+    final ClusterClient clusterClient = mock(ClusterClient.class);
+    when(restClient.cluster()).thenReturn(clusterClient);
+    when(clusterClient.getSettings(any(), any(RequestOptions.class))).thenThrow(new IOException());
     assertThrows(IllegalStateException.class, () -> client.meta());
   }
 
