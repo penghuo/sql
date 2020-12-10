@@ -43,11 +43,11 @@ class ElasticsearchStorageEngineTest {
     assertNotNull(table);
   }
 
-  @Test
-  public void getSystemTable() {
-    ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client, null);
-    Table table = engine.getTable(TABLE_INFO);
-    assertNotNull(table);
-    assertTrue(table instanceof ElasticsearchSystemIndex);
-  }
+//  @Test
+//  public void getSystemTable() {
+//    ElasticsearchStorageEngine engine = new ElasticsearchStorageEngine(client, null);
+//    Table table = engine.getTable(TABLE_INFO);
+//    assertNotNull(table);
+//    assertTrue(table instanceof ElasticsearchSystemIndex);
+//  }
 }
