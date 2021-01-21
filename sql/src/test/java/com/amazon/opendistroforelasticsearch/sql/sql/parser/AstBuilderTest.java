@@ -639,6 +639,13 @@ class AstBuilderTest {
   }
 
   @Test
+  public void test() {
+    final UnresolvedPlan unresolvedPlan = buildAST("SELECT avg_age AS avg FROM test as t");
+
+    System.out.println(unresolvedPlan);
+  }
+
+  @Test
   public void can_build_limit_clause() {
     assertEquals(
         project(
