@@ -18,17 +18,34 @@ package com.amazon.opendistroforelasticsearch.sql.expression;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @EqualsAndHashCode
-@RequiredArgsConstructor
 public class ReferenceExpression implements Expression {
   @Getter
-  private final String attr;
+  private final String bindName;
+
+  private final List<String> paths;
 
   private final ExprType type;
+
+  public ReferenceExpression(String bindName,
+                             ExprType type) {
+    this.bindName = bindName;
+    this.paths = new ArrayList<>();
+    this.type = type;
+  }
+
+  public ReferenceExpression(String bindName,
+                             List<String> paths,
+                             ExprType type) {
+    this.bindName = bindName;
+    this.paths = paths;
+    this.type = type;
+  }
 
   @Override
   public ExprValue valueOf(Environment<Expression, ExprValue> env) {
@@ -47,6 +64,10 @@ public class ReferenceExpression implements Expression {
 
   @Override
   public String toString() {
-    return attr;
+    return bindName;
+  }
+
+  public String getAttr() {
+    return bindName;
   }
 }

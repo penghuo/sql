@@ -677,6 +677,41 @@ class AstBuilderTest {
         buildAST("SELECT name FROM test LIMIT 5, 10"));
   }
 
+  @Test
+  public void poc_without_qualified() {
+    assertEquals(
+        project(
+            relation("test"),
+            alias("name", qualifiedName("name"))
+        ),
+        buildAST("SELECT name FROM test")
+    );
+  }
+
+  @Test
+  public void poc_with_index_name() {
+    assertEquals(
+        project(
+            relation("test"),
+            alias("test.name", qualifiedName("test", "name"))
+        ),
+        buildAST("SELECT test.name FROM test")
+    );
+  }
+
+  @Test
+  public void poc_with_index_alias() {
+    assertEquals(
+        project(
+            relation("test", "tt"),
+            alias("name", qualifiedName("name")),
+            alias("tt.name", qualifiedName("tt", "name"))
+        ),
+        buildAST("SELECT name, tt.name FROM test as tt")
+    );
+  }
+
+
   private UnresolvedPlan buildAST(String query) {
     ParseTree parseTree = parser.parse(query);
     return parseTree.accept(new AstBuilder(query));

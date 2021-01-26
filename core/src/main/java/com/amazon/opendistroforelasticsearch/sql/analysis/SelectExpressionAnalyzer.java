@@ -121,11 +121,11 @@ public class SelectExpressionAnalyzer
    * even though the QualifiedName doesn't have qualifier.
    */
   private String unqualifiedNameIfFieldOnly(Alias node, AnalysisContext context) {
-    UnresolvedExpression selectItem = node.getDelegated();
-    if (selectItem instanceof QualifiedName) {
-      QualifierAnalyzer qualifierAnalyzer = new QualifierAnalyzer(context);
-      return qualifierAnalyzer.unqualified((QualifiedName) selectItem);
-    }
+//    UnresolvedExpression selectItem = node.getDelegated();
+//    if (selectItem instanceof QualifiedName) {
+//      QualifierAnalyzer qualifierAnalyzer = new QualifierAnalyzer(context);
+//      return qualifierAnalyzer.unqualified((QualifiedName) selectItem);
+//    }
     return node.getName();
   }
 

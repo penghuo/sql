@@ -47,6 +47,7 @@ import com.amazon.opendistroforelasticsearch.sql.ast.tree.Sort.SortOption;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.UnresolvedPlan;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Values;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprMissingValue;
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.exception.SemanticCheckException;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
@@ -117,12 +118,13 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
     context.push();
     TypeEnvironment curEnv = context.peek();
     Table table = storageEngine.getTable(node.getTableName());
-    table.getFieldTypes().forEach((k, v) -> curEnv.define(new Symbol(Namespace.FIELD_NAME, k), v));
-
-    // Put index name or its alias in index namespace on type environment so qualifier
-    // can be removed when analyzing qualified name. The value (expr type) here doesn't matter.
-    curEnv.define(new Symbol(Namespace.INDEX_NAME, node.getTableNameOrAlias()), STRUCT);
-
+    final java.util.Map<String, ExprType> fieldTypes = table.getFieldTypes();
+//    fieldTypes.forEach((k, v) -> curEnv.define(new Symbol(Namespace.FIELD_NAME, k), v));
+//
+//    // Put index name or its alias in index namespace on type environment so qualifier
+//    // can be removed when analyzing qualified name. The value (expr type) here doesn't matter.
+//    curEnv.define(new Symbol(Namespace.INDEX_NAME, node.getTableNameOrAlias()), STRUCT);
+    curEnv.define(node.getTableNameOrAlias(), fieldTypes);
     return new LogicalRelation(node.getTableName());
   }
 

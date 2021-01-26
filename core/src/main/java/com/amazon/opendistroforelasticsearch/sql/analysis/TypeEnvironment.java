@@ -23,10 +23,14 @@ import com.amazon.opendistroforelasticsearch.sql.exception.SemanticCheckExceptio
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * The definition of Type Environment.
@@ -34,7 +38,15 @@ import lombok.Getter;
 public class TypeEnvironment implements Environment<Symbol, ExprType> {
   @Getter
   private final TypeEnvironment parent;
+
+  // default symbol table.
   private final SymbolTable symbolTable;
+
+  // Map between index name and symbol table.
+  private final Map<String, SymbolTable> indices = new HashMap<>();
+
+  // Map between variable name and the tuple of index name and field name.
+  private final Map<String, Pair<String, String>> variables = new HashMap<>();
 
   public TypeEnvironment(TypeEnvironment parent) {
     this.parent = parent;
@@ -54,14 +66,7 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
    */
   @Override
   public ExprType resolve(Symbol symbol) {
-    for (TypeEnvironment cur = this; cur != null; cur = cur.parent) {
-      Optional<ExprType> typeOptional = cur.symbolTable.lookup(symbol);
-      if (typeOptional.isPresent()) {
-        return typeOptional.get();
-      }
-    }
-    throw new SemanticCheckException(
-        String.format("can't resolve %s in type env", symbol));
+    return resolve(symbolTable, symbol);
   }
 
   /**
@@ -85,6 +90,16 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
     symbolTable.store(symbol, type);
   }
 
+  public void define(String index, Map<String, ExprType> fieldTypes) {
+    SymbolTable indexSymbolTable = new SymbolTable();
+    fieldTypes.forEach((k, v) -> {
+      final Symbol symbol = new Symbol(Namespace.FIELD_NAME, k);
+      indexSymbolTable.store(symbol, v);
+      symbolTable.store(symbol, v);
+    });
+    indices.putIfAbsent(index, indexSymbolTable);
+  }
+
   /**
    * Define expression with the type.
    *
@@ -103,5 +118,68 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
    */
   public void remove(ReferenceExpression ref) {
     remove(new Symbol(Namespace.FIELD_NAME, ref.getAttr()));
+  }
+
+  // If there is no qualified id, the default table will be used.
+  public String defaultIndex() {
+    List<String> indicesList = new ArrayList<>(indices.keySet());
+    if (indicesList.size() == 1) {
+      return indicesList.get(0);
+    } else {
+      throw new RuntimeException(String.format("failed to get default index form indices: %s",
+          indicesList));
+    }
+  }
+
+  public boolean isIndex(String indexName) {
+    return indices.containsKey(indexName);
+  }
+
+  public boolean isVariable(String varName) {
+    return variables.containsKey(varName);
+  }
+
+  /**
+   * Resolve the fieldName in the specified index
+   */
+  public ExprType resolve(String fieldName) {
+    return resolve(new Symbol(Namespace.FIELD_NAME, fieldName));
+  }
+
+  /**
+   * Resolve the fieldName in the specified index
+   */
+  public ExprType resolveInIndex(String index, String fieldName) {
+    return resolve(indicesSymbolTable(index), new Symbol(Namespace.FIELD_NAME, fieldName));
+  }
+
+  /**
+   * Resolve the variable to the index name and field symbol
+   */
+  public ExprType resolveInVariable(String var, String fieldName) {
+    if (variables.containsKey(var)) {
+      final Pair<String, String> tuple = variables.get(var);
+      return resolveInIndex(tuple.getLeft(), String.join(".", tuple.getRight(), fieldName));
+    } else {
+      throw new SemanticCheckException(
+          String.format("can't find symbol table of variable: %s", var));
+    }
+  }
+
+  private ExprType resolve(SymbolTable symbolTable, Symbol symbol) {
+    Optional<ExprType> typeOptional = symbolTable.lookup(symbol);
+    if (typeOptional.isPresent()) {
+      return typeOptional.get();
+    }
+    throw new SemanticCheckException(String.format("can't resolve %s in type env", symbol));
+  }
+
+  private SymbolTable indicesSymbolTable(String index) {
+    if (indices.containsKey(index)) {
+      return indices.get(index);
+    } else {
+      throw new SemanticCheckException(
+          String.format("can't find symbol table of index: %s", index));
+    }
   }
 }

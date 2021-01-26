@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class NamedExpression implements Expression {
 
   /**
+   *
    * Expression name.
    */
   private final String name;

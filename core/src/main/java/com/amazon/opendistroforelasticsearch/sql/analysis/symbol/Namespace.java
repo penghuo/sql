@@ -21,6 +21,7 @@ package com.amazon.opendistroforelasticsearch.sql.analysis.symbol;
 public enum Namespace {
 
   INDEX_NAME("Index"),
+  VARIABLE_NAME("Variable"),
   FIELD_NAME("Field"),
   FUNCTION_NAME("Function");
 

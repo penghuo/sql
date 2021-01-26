@@ -242,8 +242,8 @@ public class ExpressionAnalyzer extends AbstractNodeVisitor<Expression, Analysis
 
   @Override
   public Expression visitQualifiedName(QualifiedName node, AnalysisContext context) {
-    QualifierAnalyzer qualifierAnalyzer = new QualifierAnalyzer(context);
-    return visitIdentifier(qualifierAnalyzer.unqualified(node), context);
+    QualifiedNameAnalyzer qualifierAnalyzer = new QualifiedNameAnalyzer(context);
+    return qualifierAnalyzer.resolve(node);
   }
 
   private Expression visitIdentifier(String ident, AnalysisContext context) {
