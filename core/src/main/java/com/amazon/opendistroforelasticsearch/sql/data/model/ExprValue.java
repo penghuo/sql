@@ -196,4 +196,13 @@ public interface ExprValue extends Serializable, Comparable<ExprValue> {
     throw new ExpressionEvaluationException(
         "invalid to get collectionValue from value of type " + type());
   }
+
+  /**
+   * Todo.
+   */
+  default ExprValue pathValue(List<String> paths) {
+    throw new ExpressionEvaluationException(
+        String.format("invalid to get pathValue of paths: %s from value of type: %s", paths,
+            type()));
+  }
 }

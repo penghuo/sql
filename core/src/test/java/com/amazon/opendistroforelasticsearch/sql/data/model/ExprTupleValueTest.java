@@ -15,6 +15,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.data.model;
 
+import static com.amazon.opendistroforelasticsearch.sql.expression.DSL.ref;
 import static com.amazon.opendistroforelasticsearch.sql.utils.ComparisonUtil.compare;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
+import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 
@@ -64,5 +67,27 @@ class ExprTupleValueTest {
     ExpressionEvaluationException exception = assertThrows(ExpressionEvaluationException.class,
         () -> compare(tupleValue, tupleValue));
     assertEquals("ExprTupleValue instances are not comparable", exception.getMessage());
+  }
+
+  @Test
+  public void path() {
+    ExprValue address =
+        ExprValueUtils.tupleValue(ImmutableMap.of("state", "WA", "city", "seattle"));
+    ExprValue tuple = ExprTupleValue.fromExprValueMap(ImmutableMap.of(
+        "name", new ExprStringValue("bob smith"),
+        "name.nick", new ExprStringValue("bob"),
+        "address", address));
+
+    ReferenceExpression expr = ref("name", ExprCoreType.STRING);
+    ExprValue actualValue = expr.valueOf(tuple.bindingTuples());
+    assertEquals("bob smith", actualValue.stringValue());
+
+    expr = new ReferenceExpression("address.state", ExprCoreType.STRING);
+    actualValue = expr.valueOf(tuple.bindingTuples());
+    assertEquals("WA", actualValue.stringValue());
+
+    expr = new ReferenceExpression("name.nick", ExprCoreType.STRING);
+    actualValue = expr.valueOf(tuple.bindingTuples());
+    assertEquals("bob", actualValue.stringValue());
   }
 }

@@ -18,6 +18,8 @@ package com.amazon.opendistroforelasticsearch.sql.expression;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
+import java.util.Arrays;
+import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +30,21 @@ public class ReferenceExpression implements Expression {
   @Getter
   private final String attr;
 
+  @Getter
+  private final List<String> paths;
+
   private final ExprType type;
+
+  /**
+   * Constructor of ReferenceExpression.
+   * @param ref the field name. e.g. addr.state/addr.
+   * @param type type.
+   */
+  public ReferenceExpression(String ref, ExprType type) {
+    this.attr = ref;
+    this.paths = Arrays.asList(ref.split("\\."));
+    this.type = type;
+  }
 
   @Override
   public ExprValue valueOf(Environment<Expression, ExprValue> env) {

@@ -15,12 +15,15 @@
 
 package com.amazon.opendistroforelasticsearch.sql.data.model;
 
+import static com.amazon.opendistroforelasticsearch.sql.utils.ExpressionUtils.PATH_SEP;
+
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.BindingTuple;
 import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.LazyBindingTuple;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -64,13 +67,29 @@ public class ExprTupleValue extends AbstractExprValue {
 
   @Override
   public BindingTuple bindingTuples() {
-    return new LazyBindingTuple(
-        bindingName -> valueMap.getOrDefault(bindingName, ExprMissingValue.of()));
+    return new LazyBindingTuple(() -> this);
   }
 
   @Override
   public Map<String, ExprValue> tupleValue() {
     return valueMap;
+  }
+
+  @Override
+  public ExprValue pathValue(List<String> paths) {
+    if (valueMap.containsKey(String.join(PATH_SEP, paths))) {
+      return valueMap.get(String.join(PATH_SEP, paths));
+    } else {
+      if (valueMap.containsKey(paths.get(0))) {
+        if (paths.size() == 1) {
+          return valueMap.get(paths.get(0));
+        } else {
+          return valueMap.get(paths.get(0)).pathValue(paths.subList(1, paths.size()));
+        }
+      } else {
+        return ExprMissingValue.of();
+      }
+    }
   }
 
   /**
