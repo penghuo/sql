@@ -29,6 +29,7 @@ public class LazyBindingTuple extends BindingTuple {
 
   @Override
   public ExprValue resolve(ReferenceExpression ref) {
-    return lazyBinding.apply(ref.getAttr());
+    final ExprValue value = lazyBinding.apply(ref.getBindName());
+    return ref.getPaths().isEmpty() ? value : value.pathValue(ref.getPaths());
   }
 }

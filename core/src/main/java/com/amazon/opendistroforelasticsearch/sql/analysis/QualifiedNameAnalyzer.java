@@ -2,8 +2,12 @@ package com.amazon.opendistroforelasticsearch.sql.analysis;
 
 import com.amazon.opendistroforelasticsearch.sql.ast.expression.QualifiedName;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
+import java.util.Collections;
 import java.util.Optional;
 
+/**
+ * Todo.
+ */
 public class QualifiedNameAnalyzer {
 
   private TypeEnvironment env;
@@ -12,6 +16,9 @@ public class QualifiedNameAnalyzer {
     this.env = context.peek();
   }
 
+  /**
+   * Todo.
+   */
   public ReferenceExpression resolve(QualifiedName qualifiedName) {
     final Optional<String> sourceId = qualifiedName.first();
 
@@ -30,6 +37,12 @@ public class QualifiedNameAnalyzer {
     }
     // addr / addr.state
     final String fieldName = qualifiedName.toString();
-    return new ReferenceExpression(fieldName, env.resolve(fieldName));
+    return new ReferenceExpression(env.defaultIndex(), qualifiedName.getParts(),
+        env.resolve(fieldName));
+  }
+
+  public ReferenceExpression resolve(String fullName) {
+    return new ReferenceExpression(env.defaultIndex(), Collections.singletonList(fullName),
+        env.resolve(fullName));
   }
 }

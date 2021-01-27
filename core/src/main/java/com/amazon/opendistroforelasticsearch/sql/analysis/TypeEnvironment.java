@@ -25,10 +25,11 @@ import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.Getter;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -43,7 +44,7 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
   private final SymbolTable symbolTable;
 
   // Map between index name and symbol table.
-  private final Map<String, SymbolTable> indices = new HashMap<>();
+  private final Set<String> indices = new HashSet<>();
 
   // Map between variable name and the tuple of index name and field name.
   private final Map<String, Pair<String, String>> variables = new HashMap<>();
@@ -70,9 +71,25 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
   }
 
   /**
+   * Resolve the fieldName in the specified index.
+   */
+  public ExprType resolve(String fieldName) {
+    return resolve(new Symbol(Namespace.FIELD_NAME, fieldName));
+  }
+
+  private ExprType resolve(SymbolTable symbolTable, Symbol symbol) {
+    Optional<ExprType> typeOptional = symbolTable.lookup(symbol);
+    if (typeOptional.isPresent()) {
+      return typeOptional.get();
+    }
+    throw new SemanticCheckException(String.format("can't resolve %s in type env", symbol));
+  }
+
+  /**
    * Resolve all fields in the current environment.
-   * @param namespace     a namespace
-   * @return              all symbols in the namespace
+   *
+   * @param namespace a namespace
+   * @return all symbols in the namespace
    */
   public Map<String, ExprType> lookupAllFields(Namespace namespace) {
     Map<String, ExprType> result = new LinkedHashMap<>();
@@ -90,14 +107,16 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
     symbolTable.store(symbol, type);
   }
 
+  /**
+   * Todo.
+   */
   public void define(String index, Map<String, ExprType> fieldTypes) {
-    SymbolTable indexSymbolTable = new SymbolTable();
     fieldTypes.forEach((k, v) -> {
       final Symbol symbol = new Symbol(Namespace.FIELD_NAME, k);
-      indexSymbolTable.store(symbol, v);
-      symbolTable.store(symbol, v);
+      symbolTable.store(new Symbol(Namespace.FIELD_NAME, String.join(".", index, k)), v);
+      symbolTable.store(new Symbol(Namespace.FIELD_NAME, k), v);
     });
-    indices.putIfAbsent(index, indexSymbolTable);
+    indices.add(index);
   }
 
   /**
@@ -120,41 +139,29 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
     remove(new Symbol(Namespace.FIELD_NAME, ref.getAttr()));
   }
 
-  // If there is no qualified id, the default table will be used.
-  public String defaultIndex() {
-    List<String> indicesList = new ArrayList<>(indices.keySet());
-    if (indicesList.size() == 1) {
-      return indicesList.get(0);
-    } else {
-      throw new RuntimeException(String.format("failed to get default index form indices: %s",
-          indicesList));
-    }
-  }
-
+  /**
+   * Todo.
+   */
   public boolean isIndex(String indexName) {
-    return indices.containsKey(indexName);
+    return indices.contains(indexName);
   }
 
+  /**
+   * Todo.
+   */
   public boolean isVariable(String varName) {
     return variables.containsKey(varName);
   }
 
   /**
-   * Resolve the fieldName in the specified index
-   */
-  public ExprType resolve(String fieldName) {
-    return resolve(new Symbol(Namespace.FIELD_NAME, fieldName));
-  }
-
-  /**
-   * Resolve the fieldName in the specified index
+   * Resolve the fieldName in the specified index.
    */
   public ExprType resolveInIndex(String index, String fieldName) {
-    return resolve(indicesSymbolTable(index), new Symbol(Namespace.FIELD_NAME, fieldName));
+    return resolve(new Symbol(Namespace.FIELD_NAME, String.join(".", index, fieldName)));
   }
 
   /**
-   * Resolve the variable to the index name and field symbol
+   * Resolve the variable to the index name and field symbol.
    */
   public ExprType resolveInVariable(String var, String fieldName) {
     if (variables.containsKey(var)) {
@@ -166,20 +173,16 @@ public class TypeEnvironment implements Environment<Symbol, ExprType> {
     }
   }
 
-  private ExprType resolve(SymbolTable symbolTable, Symbol symbol) {
-    Optional<ExprType> typeOptional = symbolTable.lookup(symbol);
-    if (typeOptional.isPresent()) {
-      return typeOptional.get();
+  /**
+   * Todo.
+   */
+  public String defaultIndex() {
+    if (indices.size() == 1) {
+      return new ArrayList<>(indices).get(0);
+    } else {
+      throw new RuntimeException(
+          String.format("failed to get default index form indices: %s", indices));
     }
-    throw new SemanticCheckException(String.format("can't resolve %s in type env", symbol));
   }
 
-  private SymbolTable indicesSymbolTable(String index) {
-    if (indices.containsKey(index)) {
-      return indices.get(index);
-    } else {
-      throw new SemanticCheckException(
-          String.format("can't find symbol table of index: %s", index));
-    }
-  }
 }

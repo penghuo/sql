@@ -51,11 +51,6 @@ public class NamedExpressionAnalyzer extends
   }
 
   private String unqualifiedNameIfFieldOnly(Alias node, AnalysisContext context) {
-//    UnresolvedExpression selectItem = node.getDelegated();
-//    if (selectItem instanceof QualifiedName) {
-//      QualifierAnalyzer qualifierAnalyzer = new QualifierAnalyzer(context);
-//      return qualifierAnalyzer.unqualified((QualifiedName) selectItem);
-//    }
     return node.getName();
   }
 }

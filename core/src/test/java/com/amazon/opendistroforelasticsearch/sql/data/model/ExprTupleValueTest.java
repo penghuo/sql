@@ -22,8 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
+import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
 class ExprTupleValueTest {
@@ -56,6 +59,29 @@ class ExprTupleValueTest {
         ExprValueUtils.tupleValue(ImmutableMap.of("integer_value", 2, "float_value", 1f));
     assertFalse(tupleValue1.equals(tupleValue2));
     assertFalse(tupleValue2.equals(tupleValue1));
+  }
+
+  @Test
+  public void path() {
+    ExprValue address =
+        ExprValueUtils.tupleValue(ImmutableMap.of("state", "WA", "city", "seattle"));
+    ExprValue employee = ExprTupleValue.fromExprValueMap(ImmutableMap.of(
+        "name", new ExprStringValue("bob"),
+        "address", address));
+    ExprTupleValue tuple = ExprTupleValue.fromExprValueMap(ImmutableMap.of("e", employee));
+
+    ReferenceExpression expr = new ReferenceExpression("e", Arrays.asList("name"),
+        ExprCoreType.STRING);
+    ExprValue actualValue = expr.valueOf(tuple.bindingTuples());
+    assertEquals("bob", actualValue.stringValue());
+
+    expr = new ReferenceExpression("e", Arrays.asList("address"), ExprCoreType.STRUCT);
+    actualValue = expr.valueOf(tuple.bindingTuples());
+    assertEquals(ExprCoreType.STRUCT, actualValue.type());
+
+    expr = new ReferenceExpression("e", Arrays.asList("address", "state"), ExprCoreType.STRING);
+    actualValue = expr.valueOf(tuple.bindingTuples());
+    assertEquals("WA", actualValue.stringValue());
   }
 
   @Test

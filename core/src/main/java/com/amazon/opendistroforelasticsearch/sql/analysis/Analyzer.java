@@ -119,11 +119,6 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
     TypeEnvironment curEnv = context.peek();
     Table table = storageEngine.getTable(node.getTableName());
     final java.util.Map<String, ExprType> fieldTypes = table.getFieldTypes();
-//    fieldTypes.forEach((k, v) -> curEnv.define(new Symbol(Namespace.FIELD_NAME, k), v));
-//
-//    // Put index name or its alias in index namespace on type environment so qualifier
-//    // can be removed when analyzing qualified name. The value (expr type) here doesn't matter.
-//    curEnv.define(new Symbol(Namespace.INDEX_NAME, node.getTableNameOrAlias()), STRUCT);
     curEnv.define(node.getTableNameOrAlias(), fieldTypes);
     return new LogicalRelation(node.getTableName());
   }
@@ -152,7 +147,7 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
     Expression condition = expressionAnalyzer.analyze(node.getCondition(), context);
 
     ExpressionReferenceOptimizer optimizer =
-        new ExpressionReferenceOptimizer(expressionAnalyzer.getRepository(), child);
+        new ExpressionReferenceOptimizer(expressionAnalyzer.getRepository(), context, child);
     Expression optimized = optimizer.optimize(condition, context);
     return new LogicalFilter(child, optimized);
   }
@@ -206,8 +201,7 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
     }
     ImmutableList<NamedExpression> groupBys = groupbyBuilder.build();
 
-    // new context
-    context.push();
+    // existing context
     TypeEnvironment newEnv = context.peek();
     aggregators.forEach(aggregator -> newEnv.define(new Symbol(Namespace.FIELD_NAME,
         aggregator.getName()), aggregator.type()));
@@ -288,7 +282,7 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
 
     List<NamedExpression> namedExpressions =
         selectExpressionAnalyzer.analyze(node.getProjectList(), context,
-            new ExpressionReferenceOptimizer(expressionAnalyzer.getRepository(), child));
+            new ExpressionReferenceOptimizer(expressionAnalyzer.getRepository(),context, child));
     // new context
     context.push();
     TypeEnvironment newEnv = context.peek();
@@ -323,7 +317,7 @@ public class Analyzer extends AbstractNodeVisitor<LogicalPlan, AnalysisContext> 
   public LogicalPlan visitSort(Sort node, AnalysisContext context) {
     LogicalPlan child = node.getChild().get(0).accept(this, context);
     ExpressionReferenceOptimizer optimizer =
-        new ExpressionReferenceOptimizer(expressionAnalyzer.getRepository(), child);
+        new ExpressionReferenceOptimizer(expressionAnalyzer.getRepository(), context, child);
 
     List<Pair<SortOption, Expression>> sortList =
         node.getSortList().stream()

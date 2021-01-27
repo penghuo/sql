@@ -21,6 +21,7 @@ import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.BindingTup
 import com.amazon.opendistroforelasticsearch.sql.storage.bindingtuple.LazyBindingTuple;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -73,8 +74,22 @@ public class ExprTupleValue extends AbstractExprValue {
     return valueMap;
   }
 
+  @Override
+  public ExprValue pathValue(List<String> path) {
+    if (valueMap.containsKey(path.get(0))) {
+      if (path.size() == 1) {
+        return valueMap.get(path.get(0));
+      } else {
+        return valueMap.get(path.get(0)).pathValue(path.subList(1, path.size()));
+      }
+    } else {
+      return ExprMissingValue.of();
+    }
+  }
+
   /**
    * Override the equals method.
+   *
    * @return true for equal, otherwise false.
    */
   public boolean equal(ExprValue o) {

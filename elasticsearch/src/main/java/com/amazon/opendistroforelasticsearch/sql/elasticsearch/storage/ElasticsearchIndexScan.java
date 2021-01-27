@@ -20,6 +20,7 @@ import static org.elasticsearch.search.sort.FieldSortBuilder.DOC_FIELD_NAME;
 import static org.elasticsearch.search.sort.SortOrder.ASC;
 
 import com.amazon.opendistroforelasticsearch.sql.common.setting.Settings;
+import com.amazon.opendistroforelasticsearch.sql.data.model.ExprTupleValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.client.ElasticsearchClient;
@@ -29,7 +30,9 @@ import com.amazon.opendistroforelasticsearch.sql.elasticsearch.request.Elasticse
 import com.amazon.opendistroforelasticsearch.sql.elasticsearch.response.ElasticsearchResponse;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.storage.TableScanOperator;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -53,16 +56,24 @@ import org.elasticsearch.search.sort.SortBuilder;
 @ToString(onlyExplicitlyIncluded = true)
 public class ElasticsearchIndexScan extends TableScanOperator {
 
-  /** Elasticsearch client. */
+  /**
+   * Elasticsearch client.
+   */
   private final ElasticsearchClient client;
 
-  /** Search request. */
+  private final String indexName;
+
+  /**
+   * Search request.
+   */
   @EqualsAndHashCode.Include
   @Getter
   @ToString.Include
   private final ElasticsearchRequest request;
 
-  /** Search response for current batch. */
+  /**
+   * Search response for current batch.
+   */
   private Iterator<ExprValue> iterator;
 
   /**
@@ -72,8 +83,9 @@ public class ElasticsearchIndexScan extends TableScanOperator {
                                 Settings settings, String indexName,
                                 ElasticsearchExprValueFactory exprValueFactory) {
     this.client = client;
+    this.indexName = indexName;
     this.request = new ElasticsearchQueryRequest(indexName,
-            settings.getSettingValue(Settings.Key.QUERY_SIZE_LIMIT), exprValueFactory);
+        settings.getSettingValue(Settings.Key.QUERY_SIZE_LIMIT), exprValueFactory);
   }
 
   @Override
@@ -97,7 +109,7 @@ public class ElasticsearchIndexScan extends TableScanOperator {
 
   @Override
   public ExprValue next() {
-    return iterator.next();
+    return ExprTupleValue.fromExprValueMap(ImmutableMap.of(indexName, iterator.next()));
   }
 
   /**

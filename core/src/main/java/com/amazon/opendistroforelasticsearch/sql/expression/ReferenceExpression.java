@@ -28,10 +28,14 @@ public class ReferenceExpression implements Expression {
   @Getter
   private final String bindName;
 
+  @Getter
   private final List<String> paths;
 
   private final ExprType type;
 
+  /**
+   * Todo.
+   */
   public ReferenceExpression(String bindName,
                              ExprType type) {
     this.bindName = bindName;
@@ -39,6 +43,9 @@ public class ReferenceExpression implements Expression {
     this.type = type;
   }
 
+  /**
+   * Todo.
+   */
   public ReferenceExpression(String bindName,
                              List<String> paths,
                              ExprType type) {
@@ -68,6 +75,6 @@ public class ReferenceExpression implements Expression {
   }
 
   public String getAttr() {
-    return bindName;
+    return String.join(".", paths);
   }
 }

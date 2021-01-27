@@ -17,6 +17,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.analysis;
 
+import com.amazon.opendistroforelasticsearch.sql.ast.expression.QualifiedName;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ExpressionNodeVisitor;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
@@ -59,9 +60,10 @@ public class ExpressionReferenceOptimizer
   private final Map<Expression, Expression> expressionMap = new HashMap<>();
 
   public ExpressionReferenceOptimizer(
-      BuiltinFunctionRepository repository, LogicalPlan logicalPlan) {
+      BuiltinFunctionRepository repository, AnalysisContext context, LogicalPlan logicalPlan) {
     this.repository = repository;
-    logicalPlan.accept(new ExpressionMapBuilder(), null);
+    logicalPlan.accept(new ExpressionMapBuilder(), context);
+//    new ExpressionMapBuilder().visitNode(logicalPlan, context);
   }
 
   public Expression optimize(Expression analyzed, AnalysisContext context) {
@@ -98,6 +100,11 @@ public class ExpressionReferenceOptimizer
     return node.getDelegated().accept(this, context);
   }
 
+  @Override
+  public Expression visitReference(ReferenceExpression node, AnalysisContext context) {
+    return expressionMap.getOrDefault(node, node);
+  }
+
   /**
    * Implement this because Case/When is not registered in function repository.
    */
@@ -129,29 +136,32 @@ public class ExpressionReferenceOptimizer
   /**
    * Expression Map Builder.
    */
-  class ExpressionMapBuilder extends LogicalPlanNodeVisitor<Void, Void> {
+  class ExpressionMapBuilder extends LogicalPlanNodeVisitor<Void, AnalysisContext> {
+
 
     @Override
-    public Void visitNode(LogicalPlan plan, Void context) {
+    public Void visitNode(LogicalPlan plan, AnalysisContext context) {
       plan.getChild().forEach(child -> child.accept(this, context));
       return null;
     }
 
     @Override
-    public Void visitAggregation(LogicalAggregation plan, Void context) {
+    public Void visitAggregation(LogicalAggregation plan, AnalysisContext context) {
+      final QualifiedNameAnalyzer nameAnalyzer = new QualifiedNameAnalyzer(context);
+
       // Create the mapping for all the aggregator.
       plan.getAggregatorList().forEach(namedAggregator -> expressionMap
           .put(namedAggregator.getDelegated(),
-              new ReferenceExpression(namedAggregator.getName(), namedAggregator.type())));
+              nameAnalyzer.resolve(new QualifiedName(namedAggregator.getName()))));
       // Create the mapping for all the group by.
       plan.getGroupByList().forEach(groupBy -> expressionMap
           .put(groupBy.getDelegated(),
-              new ReferenceExpression(groupBy.getNameOrAlias(), groupBy.type())));
+              nameAnalyzer.resolve(new QualifiedName(groupBy.getNameOrAlias()))));
       return null;
     }
 
     @Override
-    public Void visitWindow(LogicalWindow plan, Void context) {
+    public Void visitWindow(LogicalWindow plan, AnalysisContext context) {
       Expression windowFunc = plan.getWindowFunction();
       expressionMap.put(windowFunc,
           new ReferenceExpression(((NamedExpression) windowFunc).getName(), windowFunc.type()));

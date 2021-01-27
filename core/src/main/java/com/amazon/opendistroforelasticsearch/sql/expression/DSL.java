@@ -28,6 +28,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.function.BuiltinFunc
 import com.amazon.opendistroforelasticsearch.sql.expression.window.ranking.RankingWindowFunction;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -87,6 +88,10 @@ public class DSL {
 
   public static ReferenceExpression ref(String ref, ExprType type) {
     return new ReferenceExpression(ref, type);
+  }
+
+  public static ReferenceExpression ref(String bindName, String paths, ExprType type) {
+    return new ReferenceExpression(bindName, Arrays.asList(paths.split("\\.")), type);
   }
 
   /**
