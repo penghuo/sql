@@ -86,12 +86,24 @@ public class DSL {
     }
   }
 
+  /**
+   * Construct the ReferenceExpression from ref: x.y.z / x
+   *
+   * @param ref ref string
+   * @param type type
+   * @return ReferenceExpression
+   */
   public static ReferenceExpression ref(String ref, ExprType type) {
-    return new ReferenceExpression(ref, type);
+    if (ref.contains(".")) {
+      final List<String> paths = Arrays.asList(ref.split("\\."));
+      return new ReferenceExpression(paths.get(0), paths.subList(1, paths.size()), type);
+    } else {
+      return new ReferenceExpression(ref, type);
+    }
   }
 
-  public static ReferenceExpression ref(String bindName, String paths, ExprType type) {
-    return new ReferenceExpression(bindName, Arrays.asList(paths.split("\\.")), type);
+  public static ReferenceExpression ref(String bind, String paths, ExprType type) {
+    return new ReferenceExpression(bind, Arrays.asList(paths.split("\\.")), type);
   }
 
   /**

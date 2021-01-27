@@ -59,11 +59,13 @@ public class ExpressionReferenceOptimizer
    */
   private final Map<Expression, Expression> expressionMap = new HashMap<>();
 
+  /**
+   * Todo.
+   */
   public ExpressionReferenceOptimizer(
       BuiltinFunctionRepository repository, AnalysisContext context, LogicalPlan logicalPlan) {
     this.repository = repository;
     logicalPlan.accept(new ExpressionMapBuilder(), context);
-//    new ExpressionMapBuilder().visitNode(logicalPlan, context);
   }
 
   public Expression optimize(Expression analyzed, AnalysisContext context) {

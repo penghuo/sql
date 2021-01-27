@@ -55,7 +55,7 @@ public class SelectExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void named_expression() {
     assertAnalyzeEqual(
-        DSL.named("integer_value", DSL.ref("integer_value", INTEGER)),
+        DSL.named("integer_value", DSL.ref(INDEX_NAME, "integer_value", INTEGER)),
         AstDSL.alias("integer_value", AstDSL.qualifiedName("integer_value"))
     );
   }
@@ -63,7 +63,7 @@ public class SelectExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void named_expression_with_alias() {
     assertAnalyzeEqual(
-        DSL.named("integer_value", DSL.ref("integer_value", INTEGER), "int"),
+        DSL.named("integer_value", DSL.ref(INDEX_NAME,"integer_value", INTEGER), "int"),
         AstDSL.alias("integer_value", AstDSL.qualifiedName("integer_value"), "int")
     );
   }

@@ -39,6 +39,7 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValueUtils;
 import com.amazon.opendistroforelasticsearch.sql.exception.SemanticCheckException;
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
+import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.config.ExpressionConfig;
 import com.amazon.opendistroforelasticsearch.sql.expression.window.aggregation.AggregateWindowFunction;
 import org.junit.jupiter.api.Test;
@@ -95,7 +96,7 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
   public void qualified_name() {
     assertAnalyzeEqual(
-        DSL.ref("integer_value", INTEGER),
+        DSL.ref("analyzer.integer_value", INTEGER),
         qualifiedName("integer_value")
     );
   }
@@ -124,10 +125,10 @@ class ExpressionAnalyzerTest extends AnalyzerTestBase {
         DSL.cases(
             null,
             DSL.when(
-                dsl.greater(DSL.ref("integer_value", INTEGER), DSL.literal(50)),
+                dsl.greater(DSL.ref("analyzer.integer_value", INTEGER), DSL.literal(50)),
                 DSL.literal("Fifty")),
             DSL.when(
-                dsl.greater(DSL.ref("integer_value", INTEGER), DSL.literal(30)),
+                dsl.greater(DSL.ref("analyzer.integer_value", INTEGER), DSL.literal(30)),
                 DSL.literal("Thirty"))),
         AstDSL.caseWhen(
             null,

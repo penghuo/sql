@@ -15,6 +15,7 @@
 
 package com.amazon.opendistroforelasticsearch.sql.analysis;
 
+import static com.amazon.opendistroforelasticsearch.sql.config.TestConfig.typeMapping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.amazon.opendistroforelasticsearch.sql.analysis.symbol.Namespace;
@@ -40,8 +41,10 @@ import org.springframework.context.annotation.Bean;
 
 public class AnalyzerTestBase {
 
+  public static String INDEX_NAME = "analyzer";
+
   protected Map<String, ExprType> typeMapping() {
-    return TestConfig.typeMapping;
+    return typeMapping;
   }
 
   @Bean
@@ -113,7 +116,9 @@ public class AnalyzerTestBase {
 
   @Bean
   protected TypeEnvironment typeEnvironment(SymbolTable symbolTable) {
-    return new TypeEnvironment(null, symbolTable);
+    final TypeEnvironment env = new TypeEnvironment(null);
+    env.define(INDEX_NAME, typeMapping);
+    return env;
   }
 
   @Bean

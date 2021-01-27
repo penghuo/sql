@@ -48,7 +48,6 @@ import com.amazon.opendistroforelasticsearch.sql.exception.SemanticCheckExceptio
 import com.amazon.opendistroforelasticsearch.sql.expression.DSL;
 import com.amazon.opendistroforelasticsearch.sql.expression.config.ExpressionConfig;
 import com.amazon.opendistroforelasticsearch.sql.expression.window.WindowDefinition;
-import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlanDSL;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -108,19 +107,21 @@ class AnalyzerTest extends AnalyzerTestBase {
             LogicalPlanDSL.aggregation(
                 LogicalPlanDSL.relation("schema"),
                 ImmutableList.of(
-                    DSL.named("AVG(integer_value)", dsl.avg(DSL.ref("schema", "integer_value",
+                    DSL.named("AVG(integer_value)", dsl.avg(DSL.ref("schema.integer_value",
                         INTEGER))),
-                    DSL.named("MIN(integer_value)", dsl.min(DSL.ref("schema", "integer_value", INTEGER)))),
-            ImmutableList.of(DSL.named("string_value", DSL.ref("schema", "string_value", STRING)))),
+                    DSL.named("MIN(integer_value)",
+                        dsl.min(DSL.ref("schema.integer_value", INTEGER)))),
+                ImmutableList
+                    .of(DSL.named("string_value", DSL.ref("schema.string_value", STRING)))),
             dsl.greater(// Expect to be replaced with reference by expression optimizer
-                DSL.ref("schema", "MIN(integer_value)", INTEGER), DSL.literal(integerValue(10)))),
+                DSL.ref("schema.MIN(integer_value)", INTEGER), DSL.literal(integerValue(10)))),
         AstDSL.filter(
             AstDSL.agg(
                 AstDSL.relation("schema"),
                 ImmutableList.of(
                     alias("AVG(integer_value)", aggregate("AVG", qualifiedName("integer_value"))),
                     alias("MIN(integer_value)", aggregate("MIN", qualifiedName("integer_value")))),
-            emptyList(),
+                emptyList(),
                 ImmutableList.of(alias("string_value", qualifiedName("string_value"))),
                 emptyList()),
             compare(">",
@@ -132,7 +133,8 @@ class AnalyzerTest extends AnalyzerTestBase {
     assertAnalyzeEqual(
         LogicalPlanDSL.rename(
             LogicalPlanDSL.relation("schema"),
-            ImmutableMap.of(DSL.ref("schema", "integer_value", INTEGER), DSL.ref("schema", "ivalue", INTEGER))),
+            ImmutableMap.of(DSL.ref("schema.integer_value", INTEGER),
+                DSL.ref("schema.ivalue", INTEGER))),
         AstDSL.rename(
             AstDSL.relation("schema"),
             AstDSL.map(AstDSL.field("integer_value"), AstDSL.field("ivalue"))));
@@ -298,12 +300,12 @@ class AnalyzerTest extends AnalyzerTestBase {
                     ImmutableList.of(
                         DSL.named(
                             "avg(integer_value)",
-                            dsl.avg(DSL.ref("schema", "integer_value", INTEGER)))),
-                    ImmutableList.of(DSL.named("string_value", DSL.ref("schema", "string_value",
+                            dsl.avg(DSL.ref("schema.integer_value", INTEGER)))),
+                    ImmutableList.of(DSL.named("string_value", DSL.ref("schema.string_value",
                         STRING)))),
                 // Aggregator in Sort AST node is replaced with reference by expression optimizer
-                Pair.of(SortOption.DEFAULT_ASC, DSL.ref("schema", "avg(integer_value)", DOUBLE))),
-            DSL.named("string_value", DSL.ref("schema", "string_value", STRING))),
+                Pair.of(SortOption.DEFAULT_ASC, DSL.ref("schema.avg(integer_value)", DOUBLE))),
+            DSL.named("string_value", DSL.ref("schema.string_value", STRING))),
         AstDSL.project(
             AstDSL.sort(
                 AstDSL.agg(
@@ -327,25 +329,25 @@ class AnalyzerTest extends AnalyzerTestBase {
   public void sort_with_options() {
     ImmutableMap<Argument[], SortOption> argOptions =
         ImmutableMap.<Argument[], SortOption>builder()
-            .put(new Argument[]{argument("asc", booleanLiteral(true))},
+            .put(new Argument[] {argument("asc", booleanLiteral(true))},
                 new SortOption(SortOrder.ASC, NullOrder.NULL_FIRST))
-            .put(new Argument[]{argument("asc", booleanLiteral(false))},
+            .put(new Argument[] {argument("asc", booleanLiteral(false))},
                 new SortOption(SortOrder.DESC, NullOrder.NULL_LAST))
-            .put(new Argument[]{
-                argument("asc", booleanLiteral(true)),
-                argument("nullFirst", booleanLiteral(true))},
+            .put(new Argument[] {
+                    argument("asc", booleanLiteral(true)),
+                    argument("nullFirst", booleanLiteral(true))},
                 new SortOption(SortOrder.ASC, NullOrder.NULL_FIRST))
-            .put(new Argument[]{
-                argument("asc", booleanLiteral(true)),
-                argument("nullFirst", booleanLiteral(false))},
+            .put(new Argument[] {
+                    argument("asc", booleanLiteral(true)),
+                    argument("nullFirst", booleanLiteral(false))},
                 new SortOption(SortOrder.ASC, NullOrder.NULL_LAST))
-            .put(new Argument[]{
-                argument("asc", booleanLiteral(false)),
-                argument("nullFirst", booleanLiteral(true))},
+            .put(new Argument[] {
+                    argument("asc", booleanLiteral(false)),
+                    argument("nullFirst", booleanLiteral(true))},
                 new SortOption(SortOrder.DESC, NullOrder.NULL_FIRST))
-            .put(new Argument[]{
-                argument("asc", booleanLiteral(false)),
-                argument("nullFirst", booleanLiteral(false))},
+            .put(new Argument[] {
+                    argument("asc", booleanLiteral(false)),
+                    argument("nullFirst", booleanLiteral(false))},
                 new SortOption(SortOrder.DESC, NullOrder.NULL_LAST))
             .build();
 
@@ -371,17 +373,18 @@ class AnalyzerTest extends AnalyzerTestBase {
             LogicalPlanDSL.window(
                 LogicalPlanDSL.sort(
                     LogicalPlanDSL.relation("test"),
-                    ImmutablePair.of(DEFAULT_ASC, DSL.ref("schema", "string_value", STRING)),
-                    ImmutablePair.of(DEFAULT_ASC, DSL.ref("schema", "integer_value", INTEGER))),
+                    ImmutablePair.of(DEFAULT_ASC, DSL.ref("schema.string_value", STRING)),
+                    ImmutablePair.of(DEFAULT_ASC, DSL.ref("schema.integer_value", INTEGER))),
                 DSL.named("window_function", dsl.rowNumber()),
                 new WindowDefinition(
-                    ImmutableList.of(DSL.ref("schema", "string_value", STRING)),
+                    ImmutableList.of(DSL.ref("schema.string_value", STRING)),
                     ImmutableList.of(
-                        ImmutablePair.of(DEFAULT_ASC, DSL.ref("schema", "integer_value", INTEGER))))),
-            DSL.named("string_value", DSL.ref("schema", "string_value", STRING)),
+                        ImmutablePair
+                            .of(DEFAULT_ASC, DSL.ref("schema.integer_value", INTEGER))))),
+            DSL.named("string_value", DSL.ref("schema.string_value", STRING)),
             // Alias name "window_function" is used as internal symbol name to connect
             // project item and window operator output
-            DSL.named("window_function", DSL.ref("schema", "window_function", INTEGER))),
+            DSL.named("window_function", DSL.ref("schema.window_function", INTEGER))),
         AstDSL.project(
             AstDSL.relation("test"),
             AstDSL.alias("string_value", AstDSL.qualifiedName("string_value")),
@@ -395,7 +398,7 @@ class AnalyzerTest extends AnalyzerTestBase {
 
   /**
    * SELECT name FROM (
-   *   SELECT name, age FROM test
+   * SELECT name, age FROM test
    * ) AS schema.
    */
   @Test
@@ -404,10 +407,10 @@ class AnalyzerTest extends AnalyzerTestBase {
         LogicalPlanDSL.project(
             LogicalPlanDSL.project(
                 LogicalPlanDSL.relation("schema"),
-                DSL.named("string_value", DSL.ref("schema", "string_value", STRING)),
-                DSL.named("integer_value", DSL.ref("schema", "integer_value", INTEGER))
+                DSL.named("string_value", DSL.ref("schema.string_value", STRING)),
+                DSL.named("integer_value", DSL.ref("schema.integer_value", INTEGER))
             ),
-            DSL.named("string_value", DSL.ref("schema", "string_value", STRING))
+            DSL.named("string_value", DSL.ref("schema.string_value", STRING))
         ),
         AstDSL.project(
             AstDSL.relationSubquery(
@@ -425,7 +428,7 @@ class AnalyzerTest extends AnalyzerTestBase {
 
   /**
    * SELECT * FROM (
-   *   SELECT name FROM test
+   * SELECT name FROM test
    * ) AS schema.
    */
   @Test
@@ -434,8 +437,8 @@ class AnalyzerTest extends AnalyzerTestBase {
         LogicalPlanDSL.project(
             LogicalPlanDSL.project(
                 LogicalPlanDSL.relation("schema"),
-                DSL.named("string_value", DSL.ref("schema", "string_value", STRING))),
-            DSL.named("string_value", DSL.ref("schema", "string_value", STRING))
+                DSL.named("string_value", DSL.ref("schema.string_value", STRING))),
+            DSL.named("string_value", DSL.ref("schema.string_value", STRING))
         ),
         AstDSL.project(
             AstDSL.relationSubquery(
@@ -461,11 +464,11 @@ class AnalyzerTest extends AnalyzerTestBase {
                 LogicalPlanDSL.relation("schema"),
                 ImmutableList
                     .of(DSL.named("AVG(integer_value)",
-                        dsl.avg(DSL.ref("schema", "integer_value", INTEGER)))),
+                        dsl.avg(DSL.ref("schema.integer_value", INTEGER)))),
                 ImmutableList.of(DSL.named("string_value",
-                    DSL.ref("schema", "string_value", STRING)))),
-            DSL.named("string_value", DSL.ref("schema", "string_value", STRING)),
-            DSL.named("AVG(integer_value)", DSL.ref("schema", "AVG(integer_value)", DOUBLE))),
+                    DSL.ref("schema.string_value", STRING)))),
+            DSL.named("string_value", DSL.ref("schema.string_value", STRING)),
+            DSL.named("AVG(integer_value)", DSL.ref("schema.AVG(integer_value)", DOUBLE))),
         AstDSL.project(
             AstDSL.agg(
                 AstDSL.relation("schema"),
@@ -490,11 +493,12 @@ class AnalyzerTest extends AnalyzerTestBase {
                 LogicalPlanDSL.relation("schema"),
                 ImmutableList
                     .of(DSL
-                        .named("AVG(integer_value)", dsl.avg(DSL.ref("schema", "integer_value", INTEGER)))),
+                        .named("AVG(integer_value)",
+                            dsl.avg(DSL.ref("schema.integer_value", INTEGER)))),
                 ImmutableList.of(DSL.named("abs(long_value)",
-                    dsl.abs(DSL.ref("schema", "long_value", LONG))))),
-            DSL.named("abs(long_value)", DSL.ref("schema", "abs(long_value)", LONG)),
-            DSL.named("AVG(integer_value)", DSL.ref("schema", "AVG(integer_value)", DOUBLE))),
+                    dsl.abs(DSL.ref("schema.long_value", LONG))))),
+            DSL.named("abs(long_value)", DSL.ref("schema.abs(long_value)", LONG)),
+            DSL.named("AVG(integer_value)", DSL.ref("schema.AVG(integer_value)", DOUBLE))),
         AstDSL.project(
             AstDSL.agg(
                 AstDSL.relation("schema"),
@@ -520,12 +524,12 @@ class AnalyzerTest extends AnalyzerTestBase {
                 LogicalPlanDSL.relation("schema"),
                 ImmutableList
                     .of(DSL
-                        .named("AVG(integer_value)", dsl.avg(DSL.ref("schema","integer_value",
+                        .named("AVG(integer_value)", dsl.avg(DSL.ref("schema.integer_value",
                             INTEGER)))),
                 ImmutableList.of(DSL.named("ABS(long_value)",
-                    dsl.abs(DSL.ref("schema","long_value", LONG))))),
-            DSL.named("abs(long_value)", DSL.ref("schema","ABS(long_value)", LONG)),
-            DSL.named("AVG(integer_value)", DSL.ref("schema","AVG(integer_value)", DOUBLE))),
+                    dsl.abs(DSL.ref("schema.long_value", LONG))))),
+            DSL.named("abs(long_value)", DSL.ref("schema.ABS(long_value)", LONG)),
+            DSL.named("AVG(integer_value)", DSL.ref("schema.AVG(integer_value)", DOUBLE))),
         AstDSL.project(
             AstDSL.agg(
                 AstDSL.relation("schema"),
@@ -551,11 +555,11 @@ class AnalyzerTest extends AnalyzerTestBase {
                 LogicalPlanDSL.relation("schema"),
                 ImmutableList
                     .of(DSL.named("avg(integer_value)",
-                        dsl.avg(DSL.ref("schema", "integer_value", INTEGER)))),
+                        dsl.avg(DSL.ref("schema.integer_value", INTEGER)))),
                 ImmutableList.of(DSL.named("abs(long_value)",
-                    dsl.abs(DSL.ref("schema", "long_value", LONG))))),
-            DSL.named("abs(long_value)", DSL.ref("schema", "abs(long_value)", LONG)),
-            DSL.named("abs(avg(integer_value)", dsl.abs(DSL.ref("schema", "avg(integer_value)",
+                    dsl.abs(DSL.ref("schema.long_value", LONG))))),
+            DSL.named("abs(long_value)", DSL.ref("schema.abs(long_value)", LONG)),
+            DSL.named("abs(avg(integer_value)", dsl.abs(DSL.ref("schema.avg(integer_value)",
                 DOUBLE)))),
         AstDSL.project(
             AstDSL.agg(
@@ -583,15 +587,15 @@ class AnalyzerTest extends AnalyzerTestBase {
                 LogicalPlanDSL.relation("schema"),
                 ImmutableList
                     .of(DSL.named("sum(integer_value)",
-                        dsl.sum(DSL.ref("schema", "integer_value", INTEGER))),
+                        dsl.sum(DSL.ref("schema.integer_value", INTEGER))),
                         DSL.named("avg(integer_value)",
-                            dsl.avg(DSL.ref("schema", "integer_value", INTEGER)))),
+                            dsl.avg(DSL.ref("schema.integer_value", INTEGER)))),
                 ImmutableList.of(DSL.named("abs(long_value)",
-                    dsl.abs(DSL.ref("schema", "long_value", LONG))))),
-            DSL.named("abs(long_value)", DSL.ref("schema", "abs(long_value)", LONG)),
+                    dsl.abs(DSL.ref("schema.long_value", LONG))))),
+            DSL.named("abs(long_value)", DSL.ref("schema.abs(long_value)", LONG)),
             DSL.named("sum(integer_value)-avg(integer_value)",
-                dsl.subtract(DSL.ref("schema", "sum(integer_value)", INTEGER),
-                    DSL.ref("schema", "avg(integer_value)", DOUBLE)))),
+                dsl.subtract(DSL.ref("schema.sum(integer_value)", INTEGER),
+                    DSL.ref("schema.avg(integer_value)", DOUBLE)))),
         AstDSL.project(
             AstDSL.agg(
                 AstDSL.relation("schema"),
@@ -617,7 +621,7 @@ class AnalyzerTest extends AnalyzerTestBase {
                 LogicalPlanDSL.relation("schema"),
                 1, 1
             ),
-            DSL.named("integer_value", DSL.ref("schema","integer_value", INTEGER))
+            DSL.named("integer_value", DSL.ref("schema.integer_value", INTEGER))
         ),
         AstDSL.project(
             AstDSL.limit(

@@ -19,14 +19,14 @@ import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @EqualsAndHashCode
 public class ReferenceExpression implements Expression {
-  @Getter
-  private final String bindName;
 
   @Getter
   private final List<String> paths;
@@ -36,10 +36,9 @@ public class ReferenceExpression implements Expression {
   /**
    * Todo.
    */
-  public ReferenceExpression(String bindName,
+  public ReferenceExpression(String path,
                              ExprType type) {
-    this.bindName = bindName;
-    this.paths = new ArrayList<>();
+    this.paths = Collections.singletonList(path);
     this.type = type;
   }
 
@@ -49,8 +48,9 @@ public class ReferenceExpression implements Expression {
   public ReferenceExpression(String bindName,
                              List<String> paths,
                              ExprType type) {
-    this.bindName = bindName;
-    this.paths = paths;
+    this.paths = new ArrayList<>();
+    this.paths.add(bindName);
+    this.paths.addAll(paths);
     this.type = type;
   }
 
@@ -71,10 +71,21 @@ public class ReferenceExpression implements Expression {
 
   @Override
   public String toString() {
-    return bindName;
+    return String.join(".", paths);
   }
 
   public String getAttr() {
     return String.join(".", paths);
+  }
+
+  /**
+   * Todo.
+   */
+  public ExprValue resolve(Function<String, ExprValue> bindings) {
+    if (paths.size() == 1) {
+      return bindings.apply(paths.get(0));
+    } else {
+      return bindings.apply(paths.get(0)).pathValue(paths.subList(1, paths.size()));
+    }
   }
 }

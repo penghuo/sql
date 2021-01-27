@@ -34,7 +34,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ContextConfiguration(classes = {ExpressionConfig.class, AnalyzerTestBase.class})
 class NamedExpressionAnalyzerTest extends AnalyzerTestBase {
   @Test
-  void visit_named_seleteitem() {
+  void visit_named_selectItem() {
     Alias alias = AstDSL.alias("integer_value", AstDSL.qualifiedName("integer_value"));
 
     NamedExpressionAnalyzer analyzer =
