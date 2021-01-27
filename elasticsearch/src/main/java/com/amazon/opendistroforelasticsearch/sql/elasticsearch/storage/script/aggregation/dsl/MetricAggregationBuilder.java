@@ -26,6 +26,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.ExpressionNodeVisito
 import com.amazon.opendistroforelasticsearch.sql.expression.LiteralExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.ReferenceExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.aggregation.NamedAggregator;
+import java.util.Arrays;
 import java.util.List;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -108,7 +109,7 @@ public class MetricAggregationBuilder
    */
   private Expression replaceStarOrLiteral(Expression countArg) {
     if (countArg instanceof LiteralExpression) {
-      return new ReferenceExpression("_index", INTEGER);
+      return new ReferenceExpression("g", Arrays.asList("_index"), INTEGER);
     }
     return countArg;
   }
