@@ -27,6 +27,9 @@ import com.amazon.opendistroforelasticsearch.sql.legacy.plugin.RestSqlStatsActio
 import com.amazon.opendistroforelasticsearch.sql.legacy.plugin.SqlSettings;
 import com.amazon.opendistroforelasticsearch.sql.plugin.rest.RestPPLQueryAction;
 import com.amazon.opendistroforelasticsearch.sql.plugin.rest.RestPPLStatsAction;
+import com.amazon.opendistroforelasticsearch.sql.plugin.rest.RestPutEventAction;
+import com.amazon.opendistroforelasticsearch.sql.plugin.transport.PutEventAction;
+import com.amazon.opendistroforelasticsearch.sql.plugin.transport.PutEventTransportAction;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +37,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
+import org.elasticsearch.action.ActionRequest;
+import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.metadata.IndexNameExpressionResolver;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
@@ -85,6 +90,13 @@ public class SQLPlugin extends Plugin implements ActionPlugin, ScriptPlugin {
   }
 
   @Override
+  public List<ActionHandler<? extends ActionRequest, ? extends ActionResponse>> getActions() {
+    return Arrays.asList(
+        new ActionHandler<>(PutEventAction.INSTANCE, PutEventTransportAction.class)
+    );
+  }
+
+  @Override
   public List<RestHandler> getRestHandlers(Settings settings, RestController restController,
                                            ClusterSettings clusterSettings,
                                            IndexScopedSettings indexScopedSettings,
@@ -102,7 +114,8 @@ public class SQLPlugin extends Plugin implements ActionPlugin, ScriptPlugin {
         new RestSqlAction(settings, clusterService, pluginSettings),
         new RestSqlStatsAction(settings, restController),
         new RestSqlSettingsAction(settings, restController),
-        new RestPPLStatsAction(settings, restController)
+        new RestPPLStatsAction(settings, restController),
+        new RestPutEventAction()
     );
   }
 

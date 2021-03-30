@@ -27,6 +27,7 @@ test.enabled = false
 loggerUsageCheck.enabled = false
 dependencyLicenses.enabled = false
 thirdPartyAudit.enabled = false
+checkstyleMain.ignoreFailures = true
 
 configurations.all {
     // conflict with spring-jcl
