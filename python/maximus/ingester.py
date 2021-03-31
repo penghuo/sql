@@ -8,6 +8,7 @@ import os
 import datetime
 import sys
 from elasticsearch import Elasticsearch
+import re
 
 logging.basicConfig(level=logging.INFO)
 
@@ -36,8 +37,13 @@ def es_index(index, bucket, objects):
         'object': object,
         'bucket': bucket
       },
-      'tag': 'rm'
+      'tag': tag(object)
     })
+
+def tag(input):
+  logging.info(input)
+  m = re.match(r".*mgr-(?P<tag>\d+).iad\d+.amazon.com", input)
+  return m.group('tag')
 
 def main():
   parser = OptionParser(usage="usage: %prog [options]",
