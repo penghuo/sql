@@ -18,6 +18,7 @@ package com.amazon.opendistroforelasticsearch.sql.planner.physical;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
 import com.amazon.opendistroforelasticsearch.sql.executor.ExecutionEngine;
 import com.amazon.opendistroforelasticsearch.sql.planner.PlanNode;
+import com.google.common.collect.ImmutableList;
 import java.util.Iterator;
 
 /**
@@ -46,7 +47,8 @@ public abstract class PhysicalPlan implements PlanNode<PhysicalPlan>,
   }
 
   public ExecutionEngine.Schema schema() {
-    throw new IllegalStateException(String.format("[BUG] schema can been only applied to "
-        + "ProjectOperator, instead of %s", toString()));
+//    throw new IllegalStateException(String.format("[BUG] schema can been only applied to "
+//        + "ProjectOperator, instead of %s", toString()));
+    return new ExecutionEngine.Schema(ImmutableList.of());
   }
 }

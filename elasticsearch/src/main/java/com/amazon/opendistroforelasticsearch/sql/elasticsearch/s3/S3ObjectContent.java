@@ -16,9 +16,12 @@
 
 package com.amazon.opendistroforelasticsearch.sql.elasticsearch.s3;
 
+import com.amazon.opendistroforelasticsearch.sql.elasticsearch.security.SecurityAccess;
+import com.google.common.collect.Iterators;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.PrivilegedExceptionAction;
 import java.util.Iterator;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,11 +51,11 @@ class S3ObjectContent implements Iterator<String> {
   private BufferedReader reader;
 
   public S3ObjectContent() {
-    s3 = S3Client
+    s3 = doPrivileged(() -> S3Client
         .builder()
         .region(Region.US_WEST_2)
         .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-        .build();
+        .build());
   }
 
   public void open(Pair<String, String> s3Object)  {
@@ -61,7 +64,7 @@ class S3ObjectContent implements Iterator<String> {
         .key(s3Object.getRight())
         .build();
 
-    ResponseBytes<GetObjectResponse> s3Objects = s3.getObjectAsBytes(getObjectRequest);
+    ResponseBytes<GetObjectResponse> s3Objects = doPrivileged(() -> s3.getObjectAsBytes(getObjectRequest));
     try {
       reader =
           new BufferedReader(new InputStreamReader(new GZIPInputStream(s3Objects.asInputStream())));
@@ -90,5 +93,13 @@ class S3ObjectContent implements Iterator<String> {
   @Override
   public String next() {
     return currIterator.next();
+  }
+
+  private <T> T doPrivileged(PrivilegedExceptionAction<T> action) {
+    try {
+      return SecurityAccess.doPrivileged(action);
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to perform privileged action", e);
+    }
   }
 }

@@ -38,13 +38,11 @@ import com.amazon.opendistroforelasticsearch.sql.plugin.request.PPLQueryRequestF
 import com.amazon.opendistroforelasticsearch.sql.ppl.PPLService;
 import com.amazon.opendistroforelasticsearch.sql.ppl.config.PPLServiceConfig;
 import com.amazon.opendistroforelasticsearch.sql.ppl.domain.PPLQueryRequest;
-import com.amazon.opendistroforelasticsearch.sql.protocol.response.QueryResult;
-import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.CsvResponseFormatter;
+import com.amazon.opendistroforelasticsearch.sql.protocol.response.PlanQueryResult;
 import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.Format;
 import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.JsonResponseFormatter;
-import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.RawResponseFormatter;
+import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.PlanJsonResponseFormatter;
 import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.ResponseFormatter;
-import com.amazon.opendistroforelasticsearch.sql.protocol.response.format.SimpleJsonResponseFormatter;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
@@ -195,18 +193,13 @@ public class RestPPLQueryAction extends BaseRestHandler {
 
   private ResponseListener<QueryResponse> createListener(RestChannel channel) {
     Format format = pplRequest.format();
-    ResponseFormatter<QueryResult> formatter;
-    if (format.equals(Format.CSV)) {
-      formatter = new CsvResponseFormatter(pplRequest.sanitize());
-    } else if (format.equals(Format.RAW)) {
-      formatter = new RawResponseFormatter();
-    } else {
-      formatter = new SimpleJsonResponseFormatter(PRETTY);
-    }
+    ResponseFormatter<PlanQueryResult> formatter;
+
+    formatter = new PlanJsonResponseFormatter(PRETTY);
     return new ResponseListener<QueryResponse>() {
       @Override
       public void onResponse(QueryResponse response) {
-        sendResponse(channel, OK, formatter.format(new QueryResult(response.getSchema(),
+        sendResponse(channel, OK, formatter.format(new PlanQueryResult(response.getSchema(),
             response.getResults())));
       }
 
