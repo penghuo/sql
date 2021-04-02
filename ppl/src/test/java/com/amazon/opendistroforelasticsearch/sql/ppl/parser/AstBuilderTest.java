@@ -39,6 +39,7 @@ import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.nullLiter
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.projectWithArg;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.qualifiedName;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.rareTopN;
+import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.regex;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.relation;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.rename;
 import static com.amazon.opendistroforelasticsearch.sql.ast.dsl.AstDSL.sort;
@@ -478,6 +479,16 @@ public class AstBuilderTest {
             exprList(field("c")),
             field("a"),
             field("b")
+        ));
+  }
+
+  @Test
+  public void testRegexCommand() {
+    assertEqual("source=t | regex raw \"pattern\"",
+        regex(
+            relation("t"),
+            field("raw"),
+            stringLiteral("pattern")
         ));
   }
 

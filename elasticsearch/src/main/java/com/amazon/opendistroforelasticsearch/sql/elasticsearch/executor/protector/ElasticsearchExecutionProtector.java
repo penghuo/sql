@@ -26,6 +26,7 @@ import com.amazon.opendistroforelasticsearch.sql.planner.physical.LimitOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.ProjectOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.RareTopNOperator;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.RegexOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.RemoveOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.RenameOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.SortOperator;
@@ -134,6 +135,12 @@ public class ElasticsearchExecutionProtector extends ExecutionProtector {
         visitInput(node.getInput(), context),
         node.getLimit(),
         node.getOffset());
+  }
+
+  @Override
+  public PhysicalPlan visitRegex(RegexOperator node, Object context) {
+    return new RegexOperator(visitInput(node.getInput(), context), node.getExpression(),
+        node.getRawPattern(), node.getGroups());
   }
 
   PhysicalPlan visitInput(PhysicalPlan node, Object context) {

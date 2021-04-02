@@ -50,6 +50,7 @@ import com.amazon.opendistroforelasticsearch.sql.ast.tree.Limit;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Project;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.RareTopN;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.RareTopN.CommandType;
+import com.amazon.opendistroforelasticsearch.sql.ast.tree.Regex;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Relation;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.RelationSubquery;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Rename;
@@ -374,12 +375,18 @@ public class AstDSL {
   }
 
   public static RareTopN rareTopN(UnresolvedPlan input, CommandType commandType,
-      List<Argument> noOfResults, List<UnresolvedExpression> groupList, Field... fields) {
+                                  List<Argument> noOfResults, List<UnresolvedExpression> groupList,
+                                  Field... fields) {
     return new RareTopN(input, commandType, noOfResults, Arrays.asList(fields), groupList)
         .attach(input);
   }
 
   public static Limit limit(UnresolvedPlan input, Integer limit, Integer offset) {
     return new Limit(limit, offset).attach(input);
+  }
+
+  public static Regex regex(UnresolvedPlan input, UnresolvedExpression expression,
+                            Literal pattern) {
+    return new Regex(expression, pattern, input);
   }
 }

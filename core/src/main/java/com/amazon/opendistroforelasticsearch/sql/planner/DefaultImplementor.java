@@ -25,6 +25,7 @@ import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalPlanNodeVisitor;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalProject;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRareTopN;
+import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRegex;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRelation;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRemove;
 import com.amazon.opendistroforelasticsearch.sql.planner.logical.LogicalRename;
@@ -39,6 +40,7 @@ import com.amazon.opendistroforelasticsearch.sql.planner.physical.LimitOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.PhysicalPlan;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.ProjectOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.RareTopNOperator;
+import com.amazon.opendistroforelasticsearch.sql.planner.physical.RegexOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.RemoveOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.RenameOperator;
 import com.amazon.opendistroforelasticsearch.sql.planner.physical.SortOperator;
@@ -130,6 +132,12 @@ public class DefaultImplementor<C> extends LogicalPlanNodeVisitor<PhysicalPlan, 
   @Override
   public PhysicalPlan visitLimit(LogicalLimit node, C context) {
     return new LimitOperator(visitChild(node, context), node.getLimit(), node.getOffset());
+  }
+
+  @Override
+  public PhysicalPlan visitRegex(LogicalRegex node, C context) {
+    return new RegexOperator(visitChild(node, context), node.getExpression(), node.getPattern(),
+        node.getGroups());
   }
 
   @Override

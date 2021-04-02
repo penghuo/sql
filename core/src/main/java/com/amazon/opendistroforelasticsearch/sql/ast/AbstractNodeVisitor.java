@@ -48,6 +48,7 @@ import com.amazon.opendistroforelasticsearch.sql.ast.tree.Head;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Limit;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Project;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.RareTopN;
+import com.amazon.opendistroforelasticsearch.sql.ast.tree.Regex;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Relation;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.RelationSubquery;
 import com.amazon.opendistroforelasticsearch.sql.ast.tree.Rename;
@@ -180,6 +181,10 @@ public abstract class AbstractNodeVisitor<T, C> {
   }
 
   public T visitEval(Eval node, C context) {
+    return visitChildren(node, context);
+  }
+
+  public T visitRegex(Regex node, C context) {
     return visitChildren(node, context);
   }
 

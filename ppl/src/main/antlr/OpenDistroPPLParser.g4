@@ -29,7 +29,8 @@ pplStatement
 /** commands */
 commands
     : whereCommand | fieldsCommand | renameCommand | statsCommand | dedupCommand | sortCommand | evalCommand | headCommand
-    | topCommand | rareCommand;
+    | topCommand | rareCommand
+    | regexCommand;
 
 searchCommand
     : (SEARCH)? fromClause                                          #searchFrom
@@ -91,6 +92,10 @@ rareCommand
     : RARE
     fieldList
     (byClause)?
+    ;
+
+regexCommand
+    : REGEX expression pattern
     ;
 
 /** clauses */
@@ -296,6 +301,10 @@ decimalLiteral
 
 booleanLiteral
     : TRUE | FALSE
+    ;
+
+pattern
+    : stringLiteral
     ;
 
 intervalUnit
