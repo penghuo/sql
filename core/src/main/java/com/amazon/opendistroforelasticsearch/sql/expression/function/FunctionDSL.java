@@ -23,6 +23,7 @@ import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.FunctionExpression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
+import com.google.common.base.Joiner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -44,8 +45,8 @@ public class FunctionDSL {
    * @return FunctionResolver.
    */
   public static FunctionResolver define(FunctionName functionName,
-                                 SerializableFunction<FunctionName, Pair<FunctionSignature,
-                                     FunctionBuilder>>... functions) {
+                                        SerializableFunction<FunctionName, Pair<FunctionSignature,
+                                            FunctionBuilder>>... functions) {
     return define(functionName, Arrays.asList(functions));
   }
 
@@ -57,8 +58,8 @@ public class FunctionDSL {
    * @return FunctionResolver.
    */
   public static FunctionResolver define(FunctionName functionName,
-                                 List<SerializableFunction<FunctionName, Pair<FunctionSignature,
-                                     FunctionBuilder>>> functions) {
+                                        List<SerializableFunction<FunctionName,
+                                            Pair<FunctionSignature, FunctionBuilder>>> functions) {
 
     FunctionResolver.FunctionResolverBuilder builder = FunctionResolver.builder();
     builder.functionName(functionName);
@@ -150,8 +151,8 @@ public class FunctionDSL {
    *
    * @param function   {@link ExprValue} based unary function.
    * @param returnType return type.
-   * @param args1Type   argument type.
-   * @param args2Type   argument type.
+   * @param args1Type  argument type.
+   * @param args2Type  argument type.
    * @return Binary Function Implementation.
    */
   public static SerializableFunction<FunctionName, Pair<FunctionSignature, FunctionBuilder>> impl(
@@ -225,6 +226,45 @@ public class FunctionDSL {
             public String toString() {
               return String.format("%s(%s, %s, %s)", functionName, arguments.get(0).toString(),
                   arguments.get(1).toString(), arguments.get(2).toString());
+            }
+          };
+      return Pair.of(functionSignature, functionBuilder);
+    };
+  }
+
+  /**
+   * Todo.
+   */
+  public static SerializableFunction<FunctionName,
+      Pair<FunctionSignature, FunctionBuilder>> varImpl(
+      SerializableBiFunction<ExprValue, List<ExprValue>, ExprValue> function,
+      ExprType returnType,
+      ExprType arg0Type,
+      ExprType argElseType) {
+
+    return functionName -> {
+      FunctionSignature functionSignature = FunctionSignature.var(functionName, arg0Type,
+          argElseType);
+      FunctionBuilder functionBuilder =
+          arguments -> new FunctionExpression(functionName, arguments) {
+            @Override
+            public ExprValue valueOf(Environment<Expression, ExprValue> valueEnv) {
+              ExprValue arg0 = arguments.get(0).valueOf(valueEnv);
+              List<ExprValue> argElse =
+                  arguments.subList(1, arguments.size()).stream().map(arg -> arg.valueOf(valueEnv))
+                      .collect(
+                          Collectors.toList());
+              return function.apply(arg0, argElse);
+            }
+
+            @Override
+            public ExprType type() {
+              return returnType;
+            }
+
+            @Override
+            public String toString() {
+              return String.format("%s(%s)", functionName, Joiner.on(",").join(arguments));
             }
           };
       return Pair.of(functionSignature, functionBuilder);

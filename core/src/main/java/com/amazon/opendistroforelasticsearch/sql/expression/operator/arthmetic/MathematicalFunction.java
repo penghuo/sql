@@ -202,7 +202,7 @@ public class MathematicalFunction {
         ExprCoreType.numberTypes().stream()
             .map(type -> FunctionDSL.impl(FunctionDSL.nullMissingHandling(
                 v -> new ExprDoubleValue(Math.exp(v.doubleValue()))),
-                type, DOUBLE)).collect(Collectors.toList()));
+                DOUBLE, type)).collect(Collectors.toList()));
   }
 
   /**
@@ -226,7 +226,7 @@ public class MathematicalFunction {
         ExprCoreType.numberTypes().stream()
             .map(type -> FunctionDSL.impl(FunctionDSL.nullMissingHandling(
                 v -> new ExprDoubleValue(Math.log(v.doubleValue()))),
-                type, DOUBLE)).collect(Collectors.toList()));
+                DOUBLE, type)).collect(Collectors.toList()));
   }
 
   /**
@@ -267,7 +267,7 @@ public class MathematicalFunction {
         ExprCoreType.numberTypes().stream()
             .map(type -> FunctionDSL.impl(FunctionDSL.nullMissingHandling(
                 v -> new ExprDoubleValue(Math.log10(v.doubleValue()))),
-                type, DOUBLE)).collect(Collectors.toList()));
+                DOUBLE, type)).collect(Collectors.toList()));
   }
 
   /**
@@ -563,8 +563,8 @@ public class MathematicalFunction {
 
     for (ExprType type : ExprCoreType.numberTypes()) {
       builder.add(FunctionDSL.impl(FunctionDSL
-              .nullMissingHandling(x -> new ExprDoubleValue(Math.atan(x.doubleValue()))), type,
-          DOUBLE));
+              .nullMissingHandling(x -> new ExprDoubleValue(Math.atan(x.doubleValue()))), DOUBLE,
+          type));
       builder.add(FunctionDSL.impl(FunctionDSL
           .nullMissingHandling((y, x) -> new ExprDoubleValue(Math.atan2(y.doubleValue(),
               x.doubleValue()))), DOUBLE, type, type));
@@ -639,7 +639,7 @@ public class MathematicalFunction {
         ExprCoreType.numberTypes().stream()
             .map(type -> FunctionDSL.impl(FunctionDSL.nullMissingHandling(
                 v -> new ExprDoubleValue(Math.toDegrees(v.doubleValue()))),
-                type, DOUBLE)).collect(Collectors.toList()));
+                DOUBLE, type)).collect(Collectors.toList()));
   }
 
   /**

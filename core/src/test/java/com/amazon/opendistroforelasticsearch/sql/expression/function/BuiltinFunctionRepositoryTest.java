@@ -27,6 +27,7 @@ import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationE
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import com.amazon.opendistroforelasticsearch.sql.expression.env.Environment;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class BuiltinFunctionRepositoryTest {
   @Mock
-  private FunctionResolver mockfunctionResolver;
+  private FunctionResolver mockFunctionResolver;
   @Mock
   private Map<FunctionName, FunctionResolver> mockMap;
   @Mock
@@ -45,29 +46,24 @@ class BuiltinFunctionRepositoryTest {
   @Mock
   private FunctionBuilder functionExpressionBuilder;
   @Mock
-  private FunctionSignature functionSignature;
-  @Mock
   private Expression mockExpression;
-  @Mock
-  private Environment<Expression, ExprCoreType> emptyEnv;
 
   @Test
   void register() {
     BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
-    when(mockfunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
-    repo.register(mockfunctionResolver);
+    when(mockFunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
+    repo.register(mockFunctionResolver);
 
-    verify(mockMap, times(1)).put(mockFunctionName, mockfunctionResolver);
+    verify(mockMap, times(1)).put(mockFunctionName, mockFunctionResolver);
   }
 
   @Test
   void compile() {
-    when(mockfunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
-    when(mockfunctionResolver.resolve(any())).thenReturn(functionExpressionBuilder);
+    when(mockFunctionResolver.resolve(any(), any())).thenReturn(functionExpressionBuilder);
     when(mockMap.containsKey(any())).thenReturn(true);
-    when(mockMap.get(any())).thenReturn(mockfunctionResolver);
+    when(mockMap.get(any())).thenReturn(mockFunctionResolver);
     BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
-    repo.register(mockfunctionResolver);
+    repo.register(mockFunctionResolver);
 
     repo.compile(mockFunctionName, Arrays.asList(mockExpression));
     verify(functionExpressionBuilder, times(1)).apply(any());
@@ -76,15 +72,14 @@ class BuiltinFunctionRepositoryTest {
   @Test
   @DisplayName("resolve registered function should pass")
   void resolve() {
-    when(functionSignature.getFunctionName()).thenReturn(mockFunctionName);
-    when(mockfunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
-    when(mockfunctionResolver.resolve(functionSignature)).thenReturn(functionExpressionBuilder);
+    when(mockFunctionResolver.getFunctionName()).thenReturn(mockFunctionName);
+    when(mockFunctionResolver.resolve(any(), any())).thenReturn(functionExpressionBuilder);
     when(mockMap.containsKey(mockFunctionName)).thenReturn(true);
-    when(mockMap.get(mockFunctionName)).thenReturn(mockfunctionResolver);
+    when(mockMap.get(mockFunctionName)).thenReturn(mockFunctionResolver);
     BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
-    repo.register(mockfunctionResolver);
+    repo.register(mockFunctionResolver);
 
-    assertEquals(functionExpressionBuilder, repo.resolve(functionSignature));
+    assertEquals(functionExpressionBuilder, repo.resolve(mockFunctionName, Collections.emptyList()));
   }
 
   @Test
@@ -92,10 +87,10 @@ class BuiltinFunctionRepositoryTest {
   void resolve_unregistered() {
     BuiltinFunctionRepository repo = new BuiltinFunctionRepository(mockMap);
     when(mockMap.containsKey(any())).thenReturn(false);
-    repo.register(mockfunctionResolver);
+    repo.register(mockFunctionResolver);
 
     ExpressionEvaluationException exception = assertThrows(ExpressionEvaluationException.class,
-        () -> repo.resolve(new FunctionSignature(FunctionName.of("unknown"), Arrays.asList())));
+        () -> repo.resolve(FunctionName.of("unknown"), Collections.emptyList()));
     assertEquals("unsupported function name: unknown", exception.getMessage());
   }
 }
