@@ -1,5 +1,6 @@
 package com.amazon.opendistroforelasticsearch.sql.expression.function;
 
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import com.amazon.opendistroforelasticsearch.sql.expression.Expression;
 import java.util.List;
@@ -27,8 +28,8 @@ public class BuiltinFunctionRepository {
    * Compile FunctionExpression.
    */
   public FunctionImplementation compile(FunctionName functionName, List<Expression> expressions) {
-    FunctionBuilder resolvedFunctionBuilder = resolve(new FunctionSignature(functionName,
-        expressions.stream().map(expression -> expression.type()).collect(Collectors.toList())));
+    FunctionBuilder resolvedFunctionBuilder = resolve(functionName,
+        expressions.stream().map(Expression::type).collect(Collectors.toList()));
     return resolvedFunctionBuilder.apply(expressions);
   }
 
@@ -38,10 +39,9 @@ public class BuiltinFunctionRepository {
    * @param functionSignature {@link FunctionSignature}
    * @return {@link FunctionBuilder}
    */
-  public FunctionBuilder resolve(FunctionSignature functionSignature) {
-    FunctionName functionName = functionSignature.getFunctionName();
+  public FunctionBuilder resolve(FunctionName functionName, List<ExprType> types) {
     if (functionResolverMap.containsKey(functionName)) {
-      return functionResolverMap.get(functionName).resolve(functionSignature);
+      return functionResolverMap.get(functionName).resolve(functionName, types);
     } else {
       throw new ExpressionEvaluationException(
           String.format("unsupported function name: %s", functionName.getFunctionName()));

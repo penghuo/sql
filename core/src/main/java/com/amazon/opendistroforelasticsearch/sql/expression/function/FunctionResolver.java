@@ -1,7 +1,9 @@
 package com.amazon.opendistroforelasticsearch.sql.expression.function;
 
+import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.exception.ExpressionEvaluationException;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -31,21 +33,20 @@ public class FunctionResolver {
    * If applying the widening rule, found the most match one, return it.
    * If nothing found, throw {@link ExpressionEvaluationException}
    */
-  public FunctionBuilder resolve(FunctionSignature unresolvedSignature) {
+  public FunctionBuilder resolve(FunctionName name, List<ExprType> paramTypeList) {
     PriorityQueue<Map.Entry<Integer, FunctionSignature>> functionMatchQueue = new PriorityQueue<>(
         Map.Entry.comparingByKey());
 
     for (FunctionSignature functionSignature : functionBundle.keySet()) {
       functionMatchQueue.add(
-          new AbstractMap.SimpleEntry<>(unresolvedSignature.match(functionSignature),
+          new AbstractMap.SimpleEntry<>(functionSignature.match(name, paramTypeList),
               functionSignature));
     }
     Map.Entry<Integer, FunctionSignature> bestMatchEntry = functionMatchQueue.peek();
     if (FunctionSignature.NOT_MATCH.equals(bestMatchEntry.getKey())) {
       throw new ExpressionEvaluationException(
           String.format("%s function expected %s, but get %s", functionName,
-              formatFunctions(functionBundle.keySet()),
-              unresolvedSignature.formatTypes()
+              formatFunctions(functionBundle.keySet()), formatTypes(paramTypeList)
           ));
     } else {
       return functionBundle.get(bestMatchEntry.getValue());
@@ -55,5 +56,11 @@ public class FunctionResolver {
   private String formatFunctions(Set<FunctionSignature> functionSignatures) {
     return functionSignatures.stream().map(FunctionSignature::formatTypes)
         .collect(Collectors.joining(",", "{", "}"));
+  }
+
+  private String formatTypes(List<ExprType> paramTypeList) {
+    return paramTypeList.stream()
+        .map(ExprType::typeName)
+        .collect(Collectors.joining(",", "[", "]"));
   }
 }

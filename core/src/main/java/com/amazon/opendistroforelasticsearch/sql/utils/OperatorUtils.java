@@ -18,7 +18,9 @@ package com.amazon.opendistroforelasticsearch.sql.utils;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprBooleanValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprIntegerValue;
 import com.amazon.opendistroforelasticsearch.sql.data.model.ExprValue;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -27,6 +29,7 @@ public class OperatorUtils {
    * Wildcard pattern matcher util.
    * Percent (%) character for wildcard,
    * Underscore (_) character for a single character match.
+   *
    * @param pattern string pattern to match.
    * @return if text matches pattern returns true; else return false.
    */
@@ -38,12 +41,13 @@ public class OperatorUtils {
 
   /**
    * Checks if text matches regular expression pattern.
+   *
    * @param pattern string pattern to match.
    * @return if text matches pattern returns true; else return false.
    */
   public static ExprIntegerValue matchesRegexp(ExprValue text, ExprValue pattern) {
     return new ExprIntegerValue(Pattern.compile(pattern.stringValue()).matcher(text.stringValue())
-                    .matches() ? 1 : 0);
+        .matches() ? 1 : 0);
   }
 
   private static final char DEFAULT_ESCAPE = '\\';
