@@ -42,8 +42,8 @@ public class VarPredicateOperator {
   }
 
   private static ExprBooleanValue isIn(ExprValue expr, List<ExprValue> setOfValues) {
-    return ExprBooleanValue
-        .of(setOfValues.stream().map(ExprValue::value).collect(Collectors.toSet())
-            .contains(expr.value()));
+    boolean result = setOfValues.stream().map(ExprValue::value).collect(Collectors.toSet())
+        .contains(expr.value());
+    return ExprBooleanValue.of(result);
   }
 }

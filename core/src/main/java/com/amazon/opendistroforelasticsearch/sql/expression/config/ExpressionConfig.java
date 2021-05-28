@@ -25,6 +25,7 @@ import com.amazon.opendistroforelasticsearch.sql.expression.operator.arthmetic.M
 import com.amazon.opendistroforelasticsearch.sql.expression.operator.convert.TypeCastOperator;
 import com.amazon.opendistroforelasticsearch.sql.expression.operator.predicate.BinaryPredicateOperator;
 import com.amazon.opendistroforelasticsearch.sql.expression.operator.predicate.UnaryPredicateOperator;
+import com.amazon.opendistroforelasticsearch.sql.expression.operator.predicate.VarPredicateOperator;
 import com.amazon.opendistroforelasticsearch.sql.expression.text.TextFunction;
 import com.amazon.opendistroforelasticsearch.sql.expression.window.WindowFunctions;
 import java.util.HashMap;
@@ -53,6 +54,7 @@ public class ExpressionConfig {
     WindowFunctions.register(builtinFunctionRepository);
     TextFunction.register(builtinFunctionRepository);
     TypeCastOperator.register(builtinFunctionRepository);
+    VarPredicateOperator.register(builtinFunctionRepository);
     return builtinFunctionRepository;
   }
 

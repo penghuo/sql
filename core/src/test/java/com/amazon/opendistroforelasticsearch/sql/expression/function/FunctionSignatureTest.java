@@ -15,13 +15,16 @@
 
 package com.amazon.opendistroforelasticsearch.sql.expression.function;
 
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.DOUBLE;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.FLOAT;
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.INTEGER;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.LONG;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.SHORT;
+import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.STRING;
 import static com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature.EXACTLY_MATCH;
 import static com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature.NOT_MATCH;
 import static com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature.var;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType;
 import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
@@ -40,7 +43,7 @@ class FunctionSignatureTest {
   @Mock
   private List<ExprType> funcParamTypeList;
 
-  private FunctionName unresolvedFuncName = FunctionName.of("add");
+  private FunctionName ADD = FunctionName.of("add");
 
   private List<ExprType> unresolvedParamTypeList =
       Arrays.asList(INTEGER, FLOAT);
@@ -48,7 +51,7 @@ class FunctionSignatureTest {
   @Test
   void signature_name_not_match() {
     FunctionSignature signature =
-        new FunctionSignature(this.unresolvedFuncName, unresolvedParamTypeList);
+        new FunctionSignature(this.ADD, unresolvedParamTypeList);
 
     assertEquals(NOT_MATCH, signature.match(FunctionName.of(("diff")), funcParamTypeList));
   }
@@ -56,51 +59,67 @@ class FunctionSignatureTest {
   @Test
   void signature_arguments_size_not_match() {
     FunctionSignature signature =
-        new FunctionSignature(unresolvedFuncName, Arrays.asList(INTEGER, FLOAT));
+        new FunctionSignature(ADD, Arrays.asList(INTEGER, FLOAT));
 
-    assertEquals(NOT_MATCH, signature.match(unresolvedFuncName, Arrays.asList(INTEGER)));
+    assertEquals(NOT_MATCH, signature.match(ADD, Arrays.asList(INTEGER)));
 
     signature =
-        new FunctionSignature(unresolvedFuncName, Arrays.asList(INTEGER));
+        new FunctionSignature(ADD, Arrays.asList(INTEGER));
 
-    assertEquals(NOT_MATCH, signature.match(unresolvedFuncName, Arrays.asList(INTEGER, FLOAT)));
+    assertEquals(NOT_MATCH, signature.match(ADD, Arrays.asList(INTEGER, FLOAT)));
   }
 
   @Test
   void signature_exactly_match() {
     FunctionSignature signature =
-        new FunctionSignature(unresolvedFuncName, unresolvedParamTypeList);
+        new FunctionSignature(ADD, unresolvedParamTypeList);
 
-    assertEquals(EXACTLY_MATCH, signature.match(unresolvedFuncName, unresolvedParamTypeList));
+    assertEquals(EXACTLY_MATCH, signature.match(ADD, unresolvedParamTypeList));
   }
 
   @Test
   void signature_not_match() {
     FunctionSignature signature =
-        new FunctionSignature(unresolvedFuncName, unresolvedParamTypeList);
+        new FunctionSignature(ADD, unresolvedParamTypeList);
 
-    assertEquals(NOT_MATCH, signature.match(unresolvedFuncName, Arrays.asList(ExprCoreType.STRING, ExprCoreType.STRING)));
+    assertEquals(NOT_MATCH, signature.match(ADD, Arrays.asList(ExprCoreType.STRING, ExprCoreType.STRING)));
   }
 
   @Test
   void signature_widening_match() {
     FunctionSignature signature =
-        new FunctionSignature(unresolvedFuncName, unresolvedParamTypeList);
+        new FunctionSignature(ADD, Arrays.asList(FLOAT, FLOAT));
+    assertEquals(2, signature.match(ADD, Arrays.asList(INTEGER, FLOAT)));
 
-    assertEquals(2, signature.match(unresolvedFuncName, Arrays.asList(FLOAT, FLOAT)));
+    signature =
+        new FunctionSignature(ADD, Arrays.asList(LONG, LONG));
+    assertEquals(2, signature.match(ADD, Arrays.asList(SHORT, LONG)));
   }
 
   @Test
   void var_signature_exactly_match() {
-    FunctionSignature signature = var(unresolvedFuncName, INTEGER);
+    FunctionSignature signature = var(ADD, INTEGER);
 
-    assertEquals(0, signature.match(unresolvedFuncName, Arrays.asList(INTEGER, INTEGER)));
+    assertEquals(0, signature.match(ADD, Arrays.asList(INTEGER, INTEGER)));
+  }
+
+  @Test
+  void var_signature_not_match() {
+    FunctionSignature signature = var(ADD, STRING);
+
+    assertEquals(NOT_MATCH, signature.match(ADD, Arrays.asList(INTEGER, INTEGER)));
+  }
+
+  @Test
+  void var_signature_arguments_size_not_match() {
+    FunctionSignature signature = var(ADD, INTEGER, INTEGER);
+    assertEquals(NOT_MATCH, signature.match(ADD, Arrays.asList(INTEGER)));
   }
 
   @Test
   void format_types() {
     FunctionSignature unresolvedFunSig =
-        new FunctionSignature(unresolvedFuncName, unresolvedParamTypeList);
+        new FunctionSignature(ADD, unresolvedParamTypeList);
 
     assertEquals("[INTEGER,FLOAT]", unresolvedFunSig.formatTypes());
   }

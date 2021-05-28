@@ -5,7 +5,6 @@ import com.amazon.opendistroforelasticsearch.sql.data.type.ExprType;
 import com.amazon.opendistroforelasticsearch.sql.data.type.WideningTypeRule;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,7 +24,7 @@ public class FunctionSignature {
   public static final Integer EXACTLY_MATCH = 0;
 
   private final FunctionName functionName;
-  private final ParamType paramType;
+  private final SignatureType signatureType;
 
   /**
    * The default constructor which build the fixed size parameter list.
@@ -37,67 +36,46 @@ public class FunctionSignature {
       FunctionName functionName,
       List<ExprType> paramTypeList) {
     this.functionName = functionName;
-    this.paramType = new ParamType(
-        paramTypeList.stream().map(ParamType.InternalType::single).collect(Collectors.toList()));
+    this.signatureType = new SignatureType(
+        paramTypeList.stream().map(SignatureType.InternalType::single).collect(Collectors.toList()));
   }
 
+  /**
+   * Todo.
+   */
   public static FunctionSignature var(FunctionName functionName, ExprType type, ExprType varType) {
     return new FunctionSignature(functionName,
-        new ParamType(Arrays.asList(ParamType.InternalType.single(type),
-            ParamType.InternalType.var(varType))));
+        new SignatureType(Arrays.asList(SignatureType.InternalType.single(type),
+            SignatureType.InternalType.var(varType))));
   }
 
+  /**
+   * Todo.
+   */
   public static FunctionSignature var(FunctionName functionName, ExprType varType) {
     return new FunctionSignature(functionName,
-        new ParamType(Collections.singletonList(ParamType.InternalType.var(varType))));
+        new SignatureType(Collections.singletonList(SignatureType.InternalType.var(varType))));
   }
-
-//  /**
-//   * calculate the function signature match degree.
-//   *
-//   * @return EXACTLY_MATCH: exactly match
-//   * NOT_MATCH: not match
-//   * By widening rule, the small number means better match
-//   */
-//  public int match(FunctionSignature functionSignature) {
-//    List<ExprType> functionTypeList = functionSignature.getParamTypeList();
-//    if (!functionName.equals(functionSignature.getFunctionName())
-//        || paramTypeList.size() != functionTypeList.size()) {
-//      return NOT_MATCH;
-//    }
-//
-//    int matchDegree = EXACTLY_MATCH;
-//    for (int i = 0; i < paramTypeList.size(); i++) {
-//      ExprType paramType = paramTypeList.get(i);
-//      ExprType funcType = functionTypeList.get(i);
-//      int match = WideningTypeRule.distance(paramType, funcType);
-//      if (match == WideningTypeRule.IMPOSSIBLE_WIDENING) {
-//        return NOT_MATCH;
-//      } else {
-//        matchDegree += match;
-//      }
-//    }
-//    return matchDegree;
-//  }
 
   /**
    * calculate the function signature match degree.
    *
    * @param name       the function name.
-   * @param otherTypes the list of parameter types.
+   * @param argumentTypes the list of parameter types.
    * @return EXACTLY_MATCH: exactly match
-   * NOT_MATCH: not match
-   * By widening rule, the small number means better match
+   *         NOT_MATCH: not match
+   *         By widening rule, the small number means better match
    */
-  public int match(FunctionName name, List<ExprType> otherTypes) {
-    if (!functionName.equals(name) || paramType.size() > otherTypes.size()) {
+  public int match(FunctionName name, List<ExprType> argumentTypes) {
+    if (!functionName.equals(name) || signatureType.size() > argumentTypes.size()) {
       return NOT_MATCH;
     }
 
     int matchDegree = EXACTLY_MATCH;
-    for (ExprType otherType : otherTypes) {
-      if (paramType.hasNext()) {
-        int match = WideningTypeRule.distance(paramType.next(), otherType);
+    for (int i = 0; i < argumentTypes.size(); i++) {
+      final Optional<ExprType> optionalSignatureType = signatureType.get(i);
+      if (optionalSignatureType.isPresent()) {
+        int match = WideningTypeRule.distance(argumentTypes.get(i), optionalSignatureType.get());
         if (match == WideningTypeRule.IMPOSSIBLE_WIDENING) {
           return NOT_MATCH;
         } else {
@@ -114,22 +92,23 @@ public class FunctionSignature {
    * util function for formatted arguments list.
    */
   public String formatTypes() {
-    return paramType.toString();
+    return signatureType.toString();
   }
 
   @RequiredArgsConstructor
-  public static class ParamType implements Iterator<ExprType> {
+  public static class SignatureType {
 
-    private final Iterator<InternalType> iter;
+    private final List<InternalType> types;
 
     private final String formattedType;
 
     private final Integer size;
 
-    private InternalType currentType = null;
-
-    public ParamType(List<InternalType> types) {
-      this.iter = types.iterator();
+    /**
+     * Todo.
+     */
+    public SignatureType(List<InternalType> types) {
+      this.types = types;
       this.formattedType = types.stream()
           .map(InternalType::toString)
           .collect(Collectors.joining(",", "[", "]"));
@@ -140,23 +119,20 @@ public class FunctionSignature {
       return size;
     }
 
-    @Override
-    public boolean hasNext() {
-      if (currentType != null && currentType.isVarType()) {
-        return true;
-      } else {
-        if (iter.hasNext()) {
-          currentType = iter.next();
-          return true;
-        } else {
-          return false;
-        }
+    public Optional<ExprType> get(int index) {
+      if (types.size() == 0) {
+        return Optional.empty();
       }
-    }
-
-    @Override
-    public ExprType next() {
-      return currentType.getType();
+      if (index >= types.size()) {
+        InternalType lastType = types.get(types.size() - 1);
+        if (lastType.isVarType()) {
+          return Optional.of(lastType.getType());
+        } else {
+          return Optional.empty();
+        }
+      } else {
+        return Optional.of(types.get(index).getType());
+      }
     }
 
     @Override

@@ -36,7 +36,6 @@ public class BuiltinFunctionRepository {
   /**
    * Resolve the {@link FunctionBuilder} in Builtin Function Repository.
    *
-   * @param functionSignature {@link FunctionSignature}
    * @return {@link FunctionBuilder}
    */
   public FunctionBuilder resolve(FunctionName functionName, List<ExprType> types) {

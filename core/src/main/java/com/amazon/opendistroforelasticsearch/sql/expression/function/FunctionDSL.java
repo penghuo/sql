@@ -58,8 +58,8 @@ public class FunctionDSL {
    * @return FunctionResolver.
    */
   public static FunctionResolver define(FunctionName functionName,
-                                        List<SerializableFunction<FunctionName, Pair<FunctionSignature,
-                                            FunctionBuilder>>> functions) {
+                                        List<SerializableFunction<FunctionName,
+                                            Pair<FunctionSignature, FunctionBuilder>>> functions) {
 
     FunctionResolver.FunctionResolverBuilder builder = FunctionResolver.builder();
     builder.functionName(functionName);
@@ -232,23 +232,28 @@ public class FunctionDSL {
     };
   }
 
-  public static SerializableFunction<FunctionName, Pair<FunctionSignature, FunctionBuilder>> varImpl(
+  /**
+   * Todo.
+   */
+  public static SerializableFunction<FunctionName,
+      Pair<FunctionSignature, FunctionBuilder>> varImpl(
       SerializableBiFunction<ExprValue, List<ExprValue>, ExprValue> function,
       ExprType returnType,
       ExprType arg0Type,
       ExprType argElseType) {
 
     return functionName -> {
-      FunctionSignature functionSignature =
-          new FunctionSignature(functionName, Arrays.asList(arg0Type, argElseType));
+      FunctionSignature functionSignature = FunctionSignature.var(functionName, arg0Type,
+          argElseType);
       FunctionBuilder functionBuilder =
           arguments -> new FunctionExpression(functionName, arguments) {
             @Override
             public ExprValue valueOf(Environment<Expression, ExprValue> valueEnv) {
               ExprValue arg0 = arguments.get(0).valueOf(valueEnv);
               List<ExprValue> argElse =
-                  arguments.stream().map(arg -> arg.valueOf(valueEnv)).collect(
-                      Collectors.toList());
+                  arguments.subList(1, arguments.size()).stream().map(arg -> arg.valueOf(valueEnv))
+                      .collect(
+                          Collectors.toList());
               return function.apply(arg0, argElse);
             }
 
