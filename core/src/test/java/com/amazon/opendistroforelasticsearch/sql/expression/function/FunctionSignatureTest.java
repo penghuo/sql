@@ -19,6 +19,7 @@ import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.F
 import static com.amazon.opendistroforelasticsearch.sql.data.type.ExprCoreType.INTEGER;
 import static com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature.EXACTLY_MATCH;
 import static com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature.NOT_MATCH;
+import static com.amazon.opendistroforelasticsearch.sql.expression.function.FunctionSignature.var;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -87,6 +88,13 @@ class FunctionSignatureTest {
         new FunctionSignature(unresolvedFuncName, unresolvedParamTypeList);
 
     assertEquals(2, signature.match(unresolvedFuncName, Arrays.asList(FLOAT, FLOAT)));
+  }
+
+  @Test
+  void var_signature_exactly_match() {
+    FunctionSignature signature = var(unresolvedFuncName, INTEGER);
+
+    assertEquals(0, signature.match(unresolvedFuncName, Arrays.asList(INTEGER, INTEGER)));
   }
 
   @Test

@@ -84,16 +84,30 @@ public class FunctionSignature {
    * calculate the function signature match degree.
    *
    * @param name       the function name.
-   * @param unResolvedParamTypes the list of parameter types.
+   * @param otherTypes the list of parameter types.
    * @return EXACTLY_MATCH: exactly match
    * NOT_MATCH: not match
    * By widening rule, the small number means better match
    */
-  public int match(FunctionName name, List<ExprType> unResolvedParamTypes) {
-    if (!functionName.equals(name)) {
+  public int match(FunctionName name, List<ExprType> otherTypes) {
+    if (!functionName.equals(name) || paramType.size() > otherTypes.size()) {
       return NOT_MATCH;
     }
-    return paramType.match(unResolvedParamTypes);
+
+    int matchDegree = EXACTLY_MATCH;
+    for (ExprType otherType : otherTypes) {
+      if (paramType.hasNext()) {
+        int match = WideningTypeRule.distance(paramType.next(), otherType);
+        if (match == WideningTypeRule.IMPOSSIBLE_WIDENING) {
+          return NOT_MATCH;
+        } else {
+          matchDegree += match;
+        }
+      } else {
+        return NOT_MATCH;
+      }
+    }
+    return matchDegree;
   }
 
   /**
@@ -104,53 +118,45 @@ public class FunctionSignature {
   }
 
   @RequiredArgsConstructor
-  public static class ParamType {
+  public static class ParamType implements Iterator<ExprType> {
 
-    private final Iterator<InternalType> thisTypeIter;
+    private final Iterator<InternalType> iter;
 
     private final String formattedType;
+
+    private final Integer size;
 
     private InternalType currentType = null;
 
     public ParamType(List<InternalType> types) {
-      thisTypeIter = types.iterator();
+      this.iter = types.iterator();
       this.formattedType = types.stream()
           .map(InternalType::toString)
           .collect(Collectors.joining(",", "[", "]"));
+      this.size = types.size();
     }
 
-    public int match(List<ExprType> otherTypes) {
-      int matchDegree = EXACTLY_MATCH;
-      for (int i = 0; i < otherTypes.size(); i++) {
-        Optional<ExprType> thisExprTypeOptional = nextType();
-        if (thisExprTypeOptional.isPresent()) {
-          int match = WideningTypeRule.distance(thisExprTypeOptional.get(), otherTypes.get(i));
-          if (match == WideningTypeRule.IMPOSSIBLE_WIDENING) {
-            return NOT_MATCH;
-          } else {
-            matchDegree += match;
-          }
-        } else {
-          return NOT_MATCH;
-        }
-      }
-
-      if (currentType.isSingleType() && currentType.hasNext()) {
-        return NOT_MATCH;
-      }
-      return matchDegree;
+    public int size() {
+      return size;
     }
 
-    private Optional<ExprType> nextType() {
-      if (currentType != null && currentType.hasNext()) {
-        return Optional.of(currentType.next());
+    @Override
+    public boolean hasNext() {
+      if (currentType != null && currentType.isVarType()) {
+        return true;
       } else {
-        if (thisTypeIter.hasNext()) {
-          currentType = thisTypeIter.next();
-          return nextType();
+        if (iter.hasNext()) {
+          currentType = iter.next();
+          return true;
+        } else {
+          return false;
         }
-        return Optional.empty();
       }
+    }
+
+    @Override
+    public ExprType next() {
+      return currentType.getType();
     }
 
     @Override
@@ -159,44 +165,26 @@ public class FunctionSignature {
     }
 
     @AllArgsConstructor
-    public static class InternalType implements Iterator<ExprType> {
+    public static class InternalType {
+      @Getter
       private final ExprType type;
-      private final boolean alwaysHasNext;
-      private boolean toggle;
+      private final boolean varType;
 
       public static InternalType single(ExprType type) {
-        return new InternalType(type, false, true);
+        return new InternalType(type, false);
       }
 
       public static InternalType var(ExprType type) {
-        return new InternalType(type, true, true);
+        return new InternalType(type, true);
       }
 
-      public boolean isSingleType() {
-        return !alwaysHasNext;
-      }
-
-      @Override
-      public boolean hasNext() {
-        if (alwaysHasNext) {
-          return true;
-        } else {
-          if (toggle) {
-            toggle = false;
-            return true;
-          }
-          return false;
-        }
-      }
-
-      @Override
-      public ExprType next() {
-        return type;
+      public boolean isVarType() {
+        return varType;
       }
 
       @Override
       public String toString() {
-        if (alwaysHasNext) {
+        if (varType) {
           return StringUtils.format("VAR(%s)", type.typeName());
         } else {
           return type.typeName();
